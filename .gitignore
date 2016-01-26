@@ -1,3 +1,5 @@
 Release
 curl_src
 dlsym
+.vimrc
+sockets.cpp

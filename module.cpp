@@ -12,9 +12,9 @@ static cell AMX_NATIVE_CALL AMX_CurlEasyInit(AMX* amx, cell* params)
     return 1;
 }
 
-AMX_NATIVE_INFO NATIVES[] = 
+AMX_NATIVE_INFO NATIVES[] =
 {
-    {"curl_easy_init", AMX_CurlEasyInit},
+    {"curl_init", AMX_CurlInit},
     {NULL,                         NULL}
 };
 
@@ -23,19 +23,16 @@ void OnAmxxAttach()
 {
     MF_AddNatives(NATIVES);
 
-    //   long flags = CURL_GLOBAL_NOTHING;
+    long flags = CURL_GLOBAL_NOTHING;
 
-    // #ifdef _WIN32
-    //   flags = CURL_GLOBAL_WIN32;
-    // #endif
+#ifdef _WIN32
+    flags = CURL_GLOBAL_WIN32;
+#endif
 
-    //   CURLcode code = curl_global_init(flags);
+    CURLcode code = curl_global_init(flags);
 
-    //   if (code)
-    //   {
-    //     // smutils->Format(error, err_max, "%s", curl_easy_strerror(code));
-    //     // return false;
-    //   }
+    if (code) {
+    }
 
     g_ThreadPool = new ThreadPool(THREAD_NUM);
 }
@@ -43,14 +40,9 @@ void OnAmxxAttach()
 void OnAmxxDetach()
 {
     delete g_ThreadPool;
-    // curl_global_cleanup();
+    curl_global_cleanup();
 }
 
 void OnPluginsUnloaded()
 {
-    //delete handle_table
 }
-
-// extern "C" void __cxa_pure_virtual(void)
-// {
-// }

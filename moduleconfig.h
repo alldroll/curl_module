@@ -14,12 +14,14 @@
 #ifndef __MODULECONFIG_H__
 #define __MODULECONFIG_H__
 
+#include <amxmodx_version.h>
+
 // Module info
-#define MODULE_NAME "curl"
-#define MODULE_VERSION "1.0"
+#define MODULE_NAME "Curl"
+#define MODULE_VERSION AMXX_VERSION
 #define MODULE_AUTHOR "alldroll"
 #define MODULE_URL ""
-#define MODULE_LOGTAG "CURL"
+#define MODULE_LOGTAG "ALLDROLL"
 #define MODULE_LIBRARY "curl"
 #define MODULE_LIBCLASS ""
 // If you want the module not to be reloaded on mapchange, remove / comment out the next line
@@ -55,12 +57,6 @@
 /** AMXX query */
 //#define FN_AMXX_QUERY OnAmxxQuery
 
- /** AMXX Check Game - module API is NOT available here.
- * Return AMXX_GAME_OK if this module can load on the game, AMXX_GAME_BAD if it cannot.
- * syntax: int AmxxCheckGame(const char *game)
- */
-// #define FN_AMXX_CHECKGAME AmxxCheckGame
-
 /** AMXX attach
  * Do native functions init here (MF_AddNatives)
  */
@@ -78,7 +74,7 @@
 //#define FN_AMXX_PLUGINSUNLOADING OnPluginsUnloading
 
 /** All plugins are now unloaded */
-#define FN_AMXX_PLUGINSUNLOADED OnPluginsUnloaded
+//#define FN_AMXX_PLUGINSUNLOADED OnPluginsUnloaded
 
 /**** METAMOD ****/
 // If your module doesn't use metamod, you may close the file now :)
