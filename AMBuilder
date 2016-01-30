@@ -3,15 +3,45 @@ import os.path
 
 binary = AMXX.MetaModule(builder, 'curl')
 
-binary.sources = [
-  '../../public/sdk/amxxmodule.cpp',
-  'module.cpp',
+binary.compiler.cxxincludes += [
+    os.path.join(AMXX.mysql_path, 'include'),
+    os.path.join(builder.currentSourcePath, 'mysql'),
+    os.path.join(builder.currentSourcePath, 'thread'),
 ]
 
-# if builder.target_platform == 'windows':
-  # binary.sources += ['version.rc']
+binary.compiler.defines += [
+    'SM_DEFAULT_THREADER',
+    'HAVE_STDINT_H',
+]
 
-# if builder.target_platform == 'windows':
-  # binary.compiler.postlink += ['wsock32.lib', 'ws2_32.lib']
+if builder.target_platform is 'linux' or builder.target_platform is 'mac':
+    binary.compiler.linkflags += [
+        os.path.join(AMXX.mysql_path, 'lib', 'libmysqlclient_r.a'),
+        '-lpthread',
+        '-lm'
+    ]
+    binary.compiler.postlink += [binary.Dep('curl_src/src/lib/libcurl.a')]
+
+binary.compiler.linkflags += [AMXX.zlib.binary]
+
+binary.sources = [
+    'base_curl.cpp',
+    'handles.cpp',
+    'module.cpp',
+    'lib/curl_wrap.cpp',
+    # 'threading.cpp',
+    '../../public/sdk/amxxmodule.cpp',
+    # 'thread/BaseWorker.cpp',
+    # 'thread/ThreadWorker.cpp',
+]
+
+if builder.target_platform == 'windows':
+    binary.sources += [
+      'thread/WinThreads.cpp',
+    ]
+else:
+    binary.sources += [
+      'thread/PosixThreads.cpp',
+    ]
 
 AMXX.modules += [builder.Add(binary)]

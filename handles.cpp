@@ -14,7 +14,7 @@
 #include <string.h>
 #include <sh_stack.h>
 #include <amtl/am-vector.h>
-#include "sqlite_header.h"
+#include "curl_header.h"
 
 struct QHandle
 {

@@ -1,10 +1,4 @@
 #include "amxxmodule.h"
-#include "utils/threadpool.h"
-#include <curl/curl.h>
-
-#define THREAD_NUM 2
-
-static ThreadPool* g_ThreadPool = NULL;
 
 // native curl_easy_init();
 static cell AMX_NATIVE_CALL AMX_CurlEasyInit(AMX* amx, cell* params)
@@ -32,14 +26,12 @@ void OnAmxxAttach()
     CURLcode code = curl_global_init(flags);
 
     if (code) {
+        /* TODO report error */
     }
-
-    g_ThreadPool = new ThreadPool(THREAD_NUM);
 }
 
 void OnAmxxDetach()
 {
-    delete g_ThreadPool;
     curl_global_cleanup();
 }
 
