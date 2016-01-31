@@ -2,33 +2,28 @@
 #include "curl_header.h"
 
 
-void OnAmxxAttach()
-{
+void OnAmxxAttach() {
     MF_AddNatives(g_BaseCurlNatives);
 
     long flags = CURL_GLOBAL_NOTHING;
-
 #ifdef _WIN32
     flags = CURL_GLOBAL_WIN32;
 #endif
-
     CURLcode code = curl_global_init(flags);
-
     if (code) {
         /* TODO report error */
     }
 }
 
-void OnAmxxDetach()
-{
+void OnAmxxDetach() {
     curl_global_cleanup();
+    FreeHandleTable();
 }
 
-void OnPluginsUnloaded()
-{
+void OnPluginsUnloaded() {
+    //FreeAllHandles(HANDLE_CURL); [> TODO maybe not <]
 }
 
-extern "C" void __cxa_pure_virtual(void)
-{
+extern "C" void __cxa_pure_virtual(void) {
 }
 
