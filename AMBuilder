@@ -4,46 +4,44 @@ import os.path
 binary = AMXX.MetaModule(builder, 'curl')
 
 if not AMXX.curl_path:
-    AMXX.curl_path = builder.currentSourcePath + '/curl_src'
+  AMXX.curl_path = builder.currentSourcePath + '/curl_src'
 
 binary.compiler.cxxincludes += [
-    os.path.join(AMXX.curl_path, 'include'),
-    os.path.join(builder.currentSourcePath, 'lib'),
-    os.path.join(builder.currentSourcePath, 'thread'),
+  os.path.join(AMXX.curl_path, 'include'),
+  os.path.join(builder.currentSourcePath, 'lib'),
+  os.path.join(builder.currentSourcePath, 'thread'),
 ]
 
 binary.compiler.defines += [
-    'SM_DEFAULT_THREADER',
+  'SM_DEFAULT_THREADER',
 ]
 
 if builder.target_platform is 'linux' or builder.target_platform is 'mac':
-    binary.compiler.linkflags += [
-        os.path.join(AMXX.curl_path, 'lib', 'libcurl.a'),
-        '-lpthread',
-        '-lm'
-    ]
-    # binary.compiler.postlink += [binary.Dep('curl_src/src/lib/libcurl.a')]
+  binary.compiler.linkflags += [
+    os.path.join(AMXX.curl_path, 'lib', 'libcurl.a'),
+    '-lpthread',
+    '-lm'
+  ]
 
 binary.compiler.linkflags += [AMXX.zlib.binary]
 
 binary.sources = [
-    'base_curl.cpp',
-    'handles.cpp',
-    'module.cpp',
-    'lib/curl_wrap.cpp',
-    # 'threading.cpp',
-    '../../public/sdk/amxxmodule.cpp',
-    # 'thread/BaseWorker.cpp',
-    # 'thread/ThreadWorker.cpp',
+  'base_curl.cpp',
+  'handles.cpp',
+  'module.cpp',
+  'lib/curl_wrap.cpp',
+  '../../public/sdk/amxxmodule.cpp',
+  'thread/BaseWorker.cpp',
+  'thread/ThreadWorker.cpp',
 ]
 
 if builder.target_platform == 'windows':
-    binary.sources += [
-      'thread/WinThreads.cpp',
-    ]
+  binary.sources += [
+    'thread/WinThreads.cpp',
+  ]
 else:
-    binary.sources += [
-      'thread/PosixThreads.cpp',
-    ]
+  binary.sources += [
+    'thread/PosixThreads.cpp',
+  ]
 
 AMXX.modules += [builder.Add(binary)]
