@@ -14,11 +14,6 @@ new testN = 0
 
 #define TEST_ASSERT_ERROR(%1)   TEST_ASSERT(%1, ERROR)
 
-public plugin_modules()
-{
-        require_module("curl")
-}
-
 stock run_test()
 {
     {

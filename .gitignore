@@ -3,3 +3,4 @@ curl_src
 curl_sm
 dlsym
 .vimrc
+deploy.sh
