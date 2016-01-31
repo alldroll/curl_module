@@ -1,21 +1,10 @@
 #include "amxxmodule.h"
-
-// native curl_easy_init();
-static cell AMX_NATIVE_CALL AMX_CurlEasyInit(AMX* amx, cell* params)
-{
-    return 1;
-}
-
-AMX_NATIVE_INFO NATIVES[] =
-{
-    {"curl_init", AMX_CurlInit},
-    {NULL,                         NULL}
-};
+#include "curl_header.h"
 
 
 void OnAmxxAttach()
 {
-    MF_AddNatives(NATIVES);
+    MF_AddNatives(g_BaseCurlNatives);
 
     long flags = CURL_GLOBAL_NOTHING;
 
@@ -38,3 +27,8 @@ void OnAmxxDetach()
 void OnPluginsUnloaded()
 {
 }
+
+extern "C" void __cxa_pure_virtual(void)
+{
+}
+

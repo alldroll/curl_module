@@ -3,7 +3,7 @@
 
 #include "curl/curl.h"
 #include "am-string.h"
-#include "opt.h"
+#include "opts.h"
 
 bool inline curl_ext_is_option(CURLoption option, int type) {
 #define _(op, t) (op == option && type == t) ||
@@ -23,25 +23,23 @@ extern bool inline curl_ext_is_string_option(CURLoption option) {
     return curl_ext_is_option(option, CURL_EXT_STRING);
 }
 
-class CurlWrite
-{
-public:
-    CurlWrite(const char* path);
-    ~CurlWrite();
-    size_t Write(const char* data, size_t size);
-    void GetBuffer(ke::AString& dest);
-    void GetFile(FILE** ptr);
-private:
-    char buffer_[BUFSIZ];
-    FILE* file_;
+enum CurlMethodT {
+    CURL_FILE,
+    CURL_RETURN,
+    CURL_FROM,
+    CURL_IGNORE
 };
 
-class CurlRead
-{
-public:
-    virtual ~CurlRead() {
-    };
-    virtual size_t Read(char* buffer, size_t size) = 0;
+struct CurlWrite {
+    CurlMethodT method;
+    ke::AString* buffer;
+    FILE* file;
+};
+
+struct CurlRead {
+    CurlMethodT method;
+    ke::AString* buffer;
+    FILE* file;
 };
 
 class Curl
@@ -72,12 +70,20 @@ public:
         write_data_ = write_data;
     }
 
-    inline void set_read_data(IReadData* read_data) {
+    inline void set_read_data(CurlRead* read_data) {
         read_data_ = read_data;
     }
 
     inline void set_last_error(CURLcode error) {
         last_error_ = error;
+    }
+
+    inline CurlWrite* write_data() {
+        return write_data_;
+    }
+
+    inline CurlRead* read_data() {
+        return read_data_;
     }
 
     void UrlEncode(const char* url, ke::AString* out);

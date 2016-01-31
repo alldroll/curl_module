@@ -3,24 +3,26 @@ import os.path
 
 binary = AMXX.MetaModule(builder, 'curl')
 
+if not AMXX.curl_path:
+    AMXX.curl_path = builder.currentSourcePath + '/curl_src'
+
 binary.compiler.cxxincludes += [
-    os.path.join(AMXX.mysql_path, 'include'),
-    os.path.join(builder.currentSourcePath, 'mysql'),
+    os.path.join(AMXX.curl_path, 'include'),
+    os.path.join(builder.currentSourcePath, 'lib'),
     os.path.join(builder.currentSourcePath, 'thread'),
 ]
 
 binary.compiler.defines += [
     'SM_DEFAULT_THREADER',
-    'HAVE_STDINT_H',
 ]
 
 if builder.target_platform is 'linux' or builder.target_platform is 'mac':
     binary.compiler.linkflags += [
-        os.path.join(AMXX.mysql_path, 'lib', 'libmysqlclient_r.a'),
+        os.path.join(AMXX.curl_path, 'lib', 'libcurl.a'),
         '-lpthread',
         '-lm'
     ]
-    binary.compiler.postlink += [binary.Dep('curl_src/src/lib/libcurl.a')]
+    # binary.compiler.postlink += [binary.Dep('curl_src/src/lib/libcurl.a')]
 
 binary.compiler.linkflags += [AMXX.zlib.binary]
 

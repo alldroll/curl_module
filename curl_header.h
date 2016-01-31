@@ -1,12 +1,16 @@
 #ifndef INCLUDE_CURL_HEADER_H
 #define INCLUDE_CURL_HEADER_H
 
+#include "amxxmodule.h"
+#include "curl_wrap.h"
+
 enum HandleType
 {
-    Handle_Invalid = -1,
-    Handle_Curl = 0,
-    Handle_CurlFile,
-    Handle_CurlHeader
+    HANDLE_INVALID = -1,
+    HANDLE_CURL = 0,
+    HANDLE_CURL_READ,
+    HANDLE_CURL_WRITE,
+    HANDLE_CURL_HEADER
 };
 
 typedef void (*FREEHANDLE)(void *, unsigned int);
@@ -18,6 +22,6 @@ void FreeAllHandles(HandleType type);
 void FreeHandleTable();
 
 extern AMX_NATIVE_INFO g_BaseCurlNatives[];
-extern AMX_NATIVE_INFO g_ThreadCurlNatives[];
+//extern AMX_NATIVE_INFO g_ThreadCurlNatives[];
 
 #endif

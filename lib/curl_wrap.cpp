@@ -1,26 +1,38 @@
 #include "curl_wrap.h"
 
-static size_t ReadFunction(char* buffer, size_t bytes, size_t nitems,
-    void* instream
+static size_t ReadFunction(
+    char* data, size_t bytes, size_t nitems, void* ctx
 ) {
     size_t length = 0;
-    IReadData* read_data = static_cast<IReadData*>(instream);
+    Curl* curl = (Curl*) ctx;
+    CurlRead* curl_read = curl->read_data();
 
-    if (read_data != NULL) {
-        length = read_data->Read(buffer, bytes * nitems);
+    switch (curl_read->method) {
+        case CURL_FILE:
+            return fread(data, bytes, nitems, curl_read->file);
+
+        case CURL_FROM: { /* TODO */ break; }
+
+        default: break; /* ignore case */
     }
 
     return length;
 }
 
-static size_t WriteFunction(char* buffer, size_t bytes, size_t nitems,
-        void* outstream
+static size_t WriteFunction(
+    char* data, size_t bytes, size_t nitems, void* ctx
 ) {
     size_t length = bytes * nitems;
-    CurlWrite* write_data = static_cast<CurlWrite*>(outstream);
+    Curl* curl = (Curl*) ctx;
+    CurlWrite* curl_write = curl->write_data();
 
-    if (write_data != NULL) {
-        write_data->Write(buffer, length);
+    switch (curl_write->method) {
+        case CURL_FILE:
+            return fwrite(data, bytes, nitems, curl_write->file);
+
+        case CURL_RETURN: { /* TODO */ break; }
+
+        default: break; /* ignore case */
     }
 
     return length;
@@ -76,9 +88,9 @@ Curl* Curl::MakeDuplicate() {
         return NULL;
     }
 
-    SetDefaultOptions(dulp_curl);
+    SetDefaultOptions(dupl_curl);
 
-    Curl* duplicate = new Curl(dulp_curl);
+    Curl* duplicate = new Curl(dupl_curl);
 
     duplicate->set_write_data(write_data_);
     duplicate->set_read_data(read_data_);
