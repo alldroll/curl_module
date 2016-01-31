@@ -66,6 +66,10 @@ public:
     bool SetOptionInteger(CURLoption option, int /*int32_t*/ param);
     bool SetOptionString(CURLoption option, const char* str);
 
+    inline CURL* curl() {
+        return curl_;
+    }
+
     inline void set_write_data(CurlWrite* write_data) {
         write_data_ = write_data;
     }

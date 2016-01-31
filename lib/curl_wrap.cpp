@@ -7,6 +7,10 @@ static size_t ReadFunction(
     Curl* curl = (Curl*) ctx;
     CurlRead* curl_read = curl->read_data();
 
+    if (curl_read == NULL) {
+        return length;
+    }
+
     switch (curl_read->method) {
         case CURL_FILE:
             return fread(data, bytes, nitems, curl_read->file);
@@ -26,6 +30,10 @@ static size_t WriteFunction(
     Curl* curl = (Curl*) ctx;
     CurlWrite* curl_write = curl->write_data();
 
+    if (curl_write == NULL) {
+        return length;
+    }
+
     switch (curl_write->method) {
         case CURL_FILE:
             return fwrite(data, bytes, nitems, curl_write->file);
@@ -38,15 +46,20 @@ static size_t WriteFunction(
     return length;
 }
 
-static void SetDefaultOptions(CURL* curl) {
-    if (curl == NULL) {
+static void SetDefaultOptions(Curl* ctx) {
+    if (ctx == NULL) {
         return;
     }
 
-    curl_easy_setopt(curl, CURLOPT_READFUNCTION, ReadFunction);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteFunction);
-    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+    CURL* h = ctx->curl();
+
+    curl_easy_setopt(h, CURLOPT_READFUNCTION, ReadFunction);
+    curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, WriteFunction);
+    curl_easy_setopt(h, CURLOPT_WRITEDATA, ctx);
+    curl_easy_setopt(h, CURLOPT_READDATA, ctx);
+
+    curl_easy_setopt(h, CURLOPT_NOPROGRESS, 1);
+    curl_easy_setopt(h, CURLOPT_NOSIGNAL, 1);
 }
 
 Curl::Curl(CURL* curl) :
@@ -60,14 +73,15 @@ Curl::~Curl() {
 }
 
 Curl* Curl::Initialize() {
-    CURL* curl = curl_easy_init();
+    CURL* h = curl_easy_init();
 
-    if (curl == NULL) {
+    if (h == NULL) {
         return NULL;
     }
 
+    Curl* curl = new Curl(h);
     SetDefaultOptions(curl);
-    return new Curl(curl);
+    return curl;
 }
 
 bool Curl::SetOptionHandle(CURLoption option, void* handle) {
@@ -88,13 +102,13 @@ Curl* Curl::MakeDuplicate() {
         return NULL;
     }
 
-    SetDefaultOptions(dupl_curl);
-
     Curl* duplicate = new Curl(dupl_curl);
 
     duplicate->set_write_data(write_data_);
     duplicate->set_read_data(read_data_);
     duplicate->set_last_error(last_error_);
+
+    SetDefaultOptions(duplicate);
 
     return duplicate;
 }
@@ -117,7 +131,7 @@ bool Curl::Exec() {
 
 void Curl::Reset() {
     curl_easy_reset(curl_);
-    SetDefaultOptions(curl_);
+    SetDefaultOptions(this);
 }
 
 void Curl::UrlEncode(const char* url, ke::AString* out) {
