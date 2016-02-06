@@ -135,7 +135,28 @@ CURLcode Curl::SetOptionInteger(CURLoption option, int value) {
 }
 
 CURLcode Curl::SetOptionString(CURLoption option, const char* str) {
-    return CURLE_OK;
+    CURLcode code = CURLE_OK;
+
+    switch (option) {
+        case CURLOPT_COOKIE:
+        case CURLOPT_COOKIEFILE:
+        case CURLOPT_COOKIEJAR:
+        case CURLOPT_CUSTOMREQUEST:
+        case CURLOPT_ENCODING:
+        case CURLOPT_INTERFACE:
+        case CURLOPT_PROXY:
+        case CURLOPT_PROXYUSERPWD:
+        case CURLOPT_REFERER:
+        case CURLOPT_URL:
+        case CURLOPT_USERAGENT:
+        case CURLOPT_USERPWD: {
+            str_opts_.append(ke::AString(str));
+            code = curl_easy_setopt(curl_, option, str_opts_.end()->chars());
+        }
+        default: break;
+    }
+
+    return code;
 }
 
 Curl* Curl::MakeDuplicate() {
