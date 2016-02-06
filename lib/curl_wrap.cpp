@@ -150,8 +150,10 @@ CURLcode Curl::SetOptionString(CURLoption option, const char* str) {
         case CURLOPT_URL:
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD: {
-            str_opts_.append(ke::AString(str));
-            code = curl_easy_setopt(curl_, option, str_opts_.end()->chars());
+            str_opts_.append(ke::AString());
+            ke::AString& s = str_opts_.back();
+            s = str;
+            code = curl_easy_setopt(curl_, option, s.chars());
         }
         default: break;
     }
@@ -176,20 +178,9 @@ Curl* Curl::MakeDuplicate() {
     return duplicate;
 }
 
-bool Curl::Exec() {
-    last_error_ = curl_easy_setopt(curl_, CURLOPT_WRITEDATA, write_data_);
-    if (last_error_ != CURLE_OK) {
-        return false;
-    }
-
-    last_error_ = curl_easy_setopt(curl_, CURLOPT_READDATA, read_data_);
-    if (last_error_ != CURLE_OK) {
-        return false;
-    }
-
+CURLcode Curl::Exec() {
     last_error_ = curl_easy_perform(curl_);
-
-    return last_error_ == CURLE_OK;
+    return last_error_;
 }
 
 void Curl::Reset() {

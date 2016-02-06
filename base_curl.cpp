@@ -2,7 +2,6 @@
 #include "curl_header.h"
 #include "curl_wrap.h"
 
-
 static void FreeCurl(void* p, unsigned int num) {
     Curl* curl = (Curl*) p;
     delete curl;
@@ -88,8 +87,24 @@ static cell AMX_NATIVE_CALL AMX_CurlSetOptString(AMX* amx, cell* params) {
     }
 
     int len;
-    char* val = MF_GetAmxString(amx, params[1], 0, &len);
+    char* val = MF_GetAmxString(amx, params[3], 0, &len);
     return curl->SetOptionString(opt, val);
+}
+
+// native CURLcode:curl_setopt_handle(Handle:h, CURLoption:opt, const val[])
+static cell AMX_NATIVE_CALL AMX_CurlSetOptHandle(AMX* amx, cell* params) {
+    return 0;
+}
+
+// native CURLcode:curl_exec(Handle:h, CURLoption:opt, const val[])
+static cell AMX_NATIVE_CALL AMX_CurlExec(AMX* amx, cell* params) {
+    Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
+    if (!curl) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return -1;
+    }
+
+    return curl->Exec();
 }
 
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
@@ -99,5 +114,7 @@ AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_errno", AMX_CurlErrno},
     {"curl_setopt_cell", AMX_CurlSetOptCell},
     {"curl_setopt_string", AMX_CurlSetOptString},
+    {"curl_setopt_handle", AMX_CurlSetOptHandle},
+    {"curl_exec", AMX_CurlExec},
     {NULL,                NULL},
 };

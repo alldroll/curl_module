@@ -3,7 +3,7 @@
 
 #include "curl/curl.h"
 #include "am-string.h"
-#include "am-linkedlist.h"
+#include "am-deque.h"
 #include "opts.h"
 
 bool inline curl_module_is_option(CURLoption option, int type) {
@@ -56,7 +56,7 @@ public:
     }
 
     Curl* MakeDuplicate();
-    bool Exec();
+    CURLcode Exec();
     void Reset();
 
     inline const char* StringifyLastError() {
@@ -98,7 +98,7 @@ private:
     CurlWrite* write_data_;
     CurlRead* read_data_;
     CURLcode last_error_;
-    ke::LinkedList<ke::AString> str_opts_;
+    ke::Deque<ke::AString> str_opts_;
 
     Curl(const Curl&);
     void operator=(const Curl&);
