@@ -5,22 +5,22 @@
 #include "am-string.h"
 #include "opts.h"
 
-bool inline curl_ext_is_option(CURLoption option, int type) {
+bool inline curl_module_is_option(CURLoption option, int type) {
 #define _(op, t) (op == option && type == t) ||
     return SUPPORTED_OPT_LIST(_) /*||*/ false;
 #undef _
 }
 
-extern bool inline curl_ext_is_cell_option(CURLoption option) {
-    return curl_ext_is_option(option, CURL_EXT_CELL);
+extern bool inline curl_module_is_cell_option(CURLoption option) {
+    return curl_module_is_option(option, CURL_OPT_CELL);
 }
 
-extern bool inline curl_ext_is_handle_option(CURLoption option) {
-    return curl_ext_is_option(option, CURL_EXT_HANDLE);
+extern bool inline curl_module_is_handle_option(CURLoption option) {
+    return curl_module_is_option(option, CURL_OPT_HANDLE);
 }
 
-extern bool inline curl_ext_is_string_option(CURLoption option) {
-    return curl_ext_is_option(option, CURL_EXT_STRING);
+extern bool inline curl_module_is_string_option(CURLoption option) {
+    return curl_module_is_option(option, CURL_OPT_STRING);
 }
 
 enum CurlMethodT {
@@ -62,9 +62,9 @@ public:
         return curl_easy_strerror(last_error_);
     }
 
-    bool SetOptionHandle(CURLoption option, void* handle);
-    bool SetOptionInteger(CURLoption option, int /*int32_t*/ param);
-    bool SetOptionString(CURLoption option, const char* str);
+    CURLcode SetOptionHandle(CURLoption option, void* handle);
+    CURLcode SetOptionInteger(CURLoption option, int /*int32_t*/ param);
+    CURLcode SetOptionString(CURLoption option, const char* str);
 
     inline CURL* curl() {
         return curl_;

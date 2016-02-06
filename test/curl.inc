@@ -211,14 +211,14 @@ native CURLcode:curl_errno(Handle:h);
 /**
  *
  */
-native bool:curl_setopt_cell(Handle:curl, CURLoption:option, cell:value);
+native CURLcode:curl_setopt_cell(Handle:curl, CURLoption:option, value);
 
 /**
  *
  */
-native bool:curl_setopt_string(Handle:curl, CURLoption:option, const value[]);
+native CURLcode:curl_setopt_string(Handle:curl, CURLoption:option, const value[]);
 
 /**
  *
  */
-native bool:curl_setopt_handle(Handle:curl, CURLoption:option, Handle:handle);
+native CURLcode:curl_setopt_handle(Handle:curl, CURLoption:option, Handle:handle);

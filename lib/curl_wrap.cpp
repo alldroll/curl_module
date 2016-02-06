@@ -84,16 +84,58 @@ Curl* Curl::Initialize() {
     return curl;
 }
 
-bool Curl::SetOptionHandle(CURLoption option, void* handle) {
-    return true;
+CURLcode Curl::SetOptionHandle(CURLoption option, void* handle) {
+    return CURLE_OK;
 }
 
-bool Curl::SetOptionInteger(CURLoption option, int param) {
-    return true;
+CURLcode Curl::SetOptionInteger(CURLoption option, int value) {
+    CURLcode code = CURLE_OK;
+
+    switch (option) {
+        case CURLOPT_COOKIESESSION:
+        case CURLOPT_AUTOREFERER:
+        case CURLOPT_CRLF:
+        case CURLOPT_DNS_USE_GLOBAL_CACHE:
+        case CURLOPT_FAILONERROR:
+        case CURLOPT_FOLLOWLOCATION:
+        case CURLOPT_FORBID_REUSE:
+        case CURLOPT_FRESH_CONNECT:
+        case CURLOPT_HEADER:
+        case CURLOPT_HTTPGET:
+        case CURLOPT_HTTPPROXYTUNNEL:
+        case CURLOPT_NOBODY:
+        case CURLOPT_POST:
+        case CURLOPT_NOSIGNAL:
+        case CURLOPT_PUT:
+        case CURLOPT_UNRESTRICTED_AUTH:
+        case CURLOPT_UPLOAD:
+        case CURLOPT_VERBOSE:
+        case CURLOPT_CONNECTTIMEOUT:
+        case CURLOPT_CONNECTTIMEOUT_MS:
+        case CURLOPT_DNS_CACHE_TIMEOUT:
+        case CURLOPT_HTTP_VERSION:
+        case CURLOPT_HTTPAUTH:
+        case CURLOPT_INFILESIZE:
+        case CURLOPT_LOW_SPEED_LIMIT:
+        case CURLOPT_LOW_SPEED_TIME:
+        case CURLOPT_MAXCONNECTS:
+        case CURLOPT_PORT:
+        case CURLOPT_PROXYAUTH:
+        case CURLOPT_PROXYPORT:
+        case CURLOPT_PROXYTYPE:
+        case CURLOPT_RESUME_FROM:
+        case CURLOPT_TIMEOUT:
+        case CURLOPT_TIMEOUT_MS: {
+            code = curl_easy_setopt(curl_, option, value);
+        }
+        default: break;
+    }
+
+    return code;
 }
 
-bool Curl::SetOptionString(CURLoption option, const char* str) {
-    return true;
+CURLcode Curl::SetOptionString(CURLoption option, const char* str) {
+    return CURLE_OK;
 }
 
 Curl* Curl::MakeDuplicate() {
