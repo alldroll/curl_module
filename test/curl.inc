@@ -749,3 +749,8 @@ native CURLcode:curl_setopt_handle(Handle:curl, CURLoption:option, Handle:handle
  *
  */
 native CURLcode:curl_exec(Handle:curl);
+
+/**
+ *
+ */
+native Handle:curl_duphandle(Handle:curl);

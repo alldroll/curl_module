@@ -44,7 +44,9 @@ static cell AMX_NATIVE_CALL AMX_CurlReset(AMX* amx, cell* params) {
 }
 
 
-// native CURLcode:curl_errno(Handle:h);
+/* native CURLcode:curl_errno(Handle:h);
+ * TODO fix last_error is not actual
+ */
 static cell AMX_NATIVE_CALL AMX_CurlErrno(AMX* amx, cell* params) {
     Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
     if (!curl) {
@@ -69,7 +71,7 @@ static cell AMX_NATIVE_CALL AMX_CurlSetOptCell(AMX* amx, cell* params) {
         return -1;
     }
 
-    return curl->SetOptionInteger(opt, (int)params[3]);
+    return curl->SetOptionCell(opt, (int)params[3]);
 }
 
 // native CURLcode:curl_setopt_string(Handle:h, CURLoption:opt, const val[])
@@ -107,6 +109,23 @@ static cell AMX_NATIVE_CALL AMX_CurlExec(AMX* amx, cell* params) {
     return curl->Exec();
 }
 
+// native Handle:curl_duphandle(Handle:h)
+static cell AMX_NATIVE_CALL AMX_CurlDupHandle(AMX* amx, cell* params) {
+    Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
+    if (!curl) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return -1;
+    }
+
+    Curl* duplicate = curl->MakeDuplicate();
+    if (!duplicate) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Couldn't allocate duplicate");
+        return -1;
+    }
+
+    return MakeHandle(duplicate, HANDLE_CURL, FreeCurl);
+}
+
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_init", AMX_CurlInit},
     {"curl_close", AMX_CurlClose},
@@ -116,5 +135,6 @@ AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_setopt_string", AMX_CurlSetOptString},
     {"curl_setopt_handle", AMX_CurlSetOptHandle},
     {"curl_exec", AMX_CurlExec},
-    {NULL,                NULL},
+    {"curl_duphandle", AMX_CurlDupHandle},
+    {NULL, NULL}
 };

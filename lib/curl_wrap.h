@@ -3,7 +3,7 @@
 
 #include "curl/curl.h"
 #include "am-string.h"
-#include "am-deque.h"
+#include "am-linkedlist.h"
 #include "opts.h"
 
 bool inline curl_module_is_option(CURLoption option, int type) {
@@ -43,8 +43,29 @@ struct CurlRead {
     FILE* file;
 };
 
-class Curl
-{
+class CurlOption {
+public:
+    CurlOption(CURLoption opt, ke::AString* sval);
+    CurlOption(CURLoption opt, int ival);
+    CurlOption(CURLoption opt, void* hval);
+    ~CurlOption();
+
+    CURLoption opt;
+    union {
+        ke::AString* sval;
+        int ival;
+        void* hval;
+    };
+    enum {
+        CELL = CURL_OPT_CELL,
+        STRING = CURL_OPT_STRING,
+        HANDLE = CURL_OPT_HANDLE
+    } tag;
+};
+
+typedef ke::LinkedList<CurlOption*> CurlOptsListT;
+
+class Curl {
 public:
     Curl(CURL* curl);
     ~Curl();
@@ -64,7 +85,7 @@ public:
     }
 
     CURLcode SetOptionHandle(CURLoption option, void* handle);
-    CURLcode SetOptionInteger(CURLoption option, int /*int32_t*/ param);
+    CURLcode SetOptionCell(CURLoption option, int param);
     CURLcode SetOptionString(CURLoption option, const char* str);
 
     inline CURL* curl() {
@@ -83,12 +104,12 @@ public:
         last_error_ = error;
     }
 
-    inline CurlWrite* write_data() {
-        return write_data_;
-    }
-
     inline CurlRead* read_data() {
         return read_data_;
+    }
+
+    inline CurlWrite* write_data() {
+        return write_data_;
     }
 
     void UrlEncode(const char* url, ke::AString* out);
@@ -98,7 +119,7 @@ private:
     CurlWrite* write_data_;
     CurlRead* read_data_;
     CURLcode last_error_;
-    ke::Deque<ke::AString> str_opts_;
+    CurlOptsListT opts_;
 
     Curl(const Curl&);
     void operator=(const Curl&);

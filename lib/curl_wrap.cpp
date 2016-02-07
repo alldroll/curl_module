@@ -62,6 +62,19 @@ static void SetDefaultOptions(Curl* ctx) {
     curl_easy_setopt(h, CURLOPT_NOSIGNAL, 1);
 }
 
+CurlOption::CurlOption(CURLoption opt, ke::AString* sval) :
+    opt(opt), sval(sval), tag(CurlOption::STRING) {}
+
+CurlOption::CurlOption(CURLoption opt, int ival) :
+    opt(opt), ival(ival), tag(CurlOption::CELL) {}
+
+CurlOption::CurlOption(CURLoption opt, void* hval) :
+    opt(opt), hval(hval), tag(CurlOption::HANDLE) {}
+
+CurlOption::~CurlOption() {
+    delete sval;
+}
+
 Curl::Curl(CURL* curl) :
     curl_(curl), write_data_(NULL),
     read_data_(NULL), last_error_(CURLE_OK) {}
@@ -88,7 +101,7 @@ CURLcode Curl::SetOptionHandle(CURLoption option, void* handle) {
     return CURLE_OK;
 }
 
-CURLcode Curl::SetOptionInteger(CURLoption option, int value) {
+CURLcode Curl::SetOptionCell(CURLoption option, int value) {
     CURLcode code = CURLE_OK;
 
     switch (option) {
@@ -126,7 +139,11 @@ CURLcode Curl::SetOptionInteger(CURLoption option, int value) {
         case CURLOPT_RESUME_FROM:
         case CURLOPT_TIMEOUT:
         case CURLOPT_TIMEOUT_MS: {
+            CurlOption* pack = new CurlOption(option, value);
+            opts_.prepend(pack);
             code = curl_easy_setopt(curl_, option, value);
+
+            break;
         }
         default: break;
     }
@@ -150,11 +167,12 @@ CURLcode Curl::SetOptionString(CURLoption option, const char* str) {
         case CURLOPT_URL:
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD: {
-            str_opts_.append(ke::AString());
-            ke::AString& s = str_opts_.back();
-            s = str;
-            code = curl_easy_setopt(curl_, option, s.chars());
-        }
+            CurlOption* pack = new CurlOption(option, new ke::AString(str));
+            opts_.prepend(pack);
+            code = curl_easy_setopt(curl_, option, pack->sval->chars());
+
+            break;
+        };
         default: break;
     }
 
@@ -162,18 +180,41 @@ CURLcode Curl::SetOptionString(CURLoption option, const char* str) {
 }
 
 Curl* Curl::MakeDuplicate() {
-    CURL* dupl_curl = curl_easy_duphandle(curl_);
-    if (dupl_curl == NULL) {
+    Curl* duplicate = Curl::Initialize();
+    if (!duplicate) {
         return NULL;
     }
-
-    Curl* duplicate = new Curl(dupl_curl);
 
     duplicate->set_write_data(write_data_);
     duplicate->set_read_data(read_data_);
     duplicate->set_last_error(last_error_);
 
-    SetDefaultOptions(duplicate);
+    CurlOptsListT::iterator iter = opts_.begin();
+
+    while (iter != opts_.end()) {
+        const CurlOption* val = *iter;
+
+        switch (val->tag) {
+            case CURL_OPT_CELL: {
+                duplicate->SetOptionCell(val->opt, val->ival);
+                break;
+            }
+
+            case CURL_OPT_STRING: {
+                duplicate->SetOptionString(val->opt, val->sval->chars());
+                break;
+            }
+
+            case CURL_OPT_HANDLE: {
+                duplicate->SetOptionHandle(val->opt, val->hval);
+                break;
+            }
+
+            default: break;
+        }
+
+        iter++;
+    }
 
     return duplicate;
 }
@@ -186,6 +227,7 @@ CURLcode Curl::Exec() {
 void Curl::Reset() {
     curl_easy_reset(curl_);
     SetDefaultOptions(this);
+    opts_.clear();
 }
 
 void Curl::UrlEncode(const char* url, ke::AString* out) {

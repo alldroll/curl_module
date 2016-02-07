@@ -45,6 +45,36 @@ stock run_test()
         TEST_EQUAL(curl_close(curl), 1)
     }
 
+    {
+        TEST_INIT("curl test duplicate")
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "localhost"), CURLE_OK)
+
+        new Handle:dupl = curl_duphandle(curl);
+        TEST_NEQUAL(dupl, INVALID_HANDLE)
+
+        TEST_EQUAL(curl_exec(dupl), CURLE_OK)
+        TEST_EQUAL(curl_close(curl), 1)
+        TEST_EQUAL(curl_exec(dupl), CURLE_OK)
+        TEST_EQUAL(curl_close(dupl), 1)
+    }
+
+    {
+        TEST_INIT("curl test reset")
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 1010), CURLE_OK)
+
+        TEST_EQUAL(curl_reset(curl), 1);
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "localhost"), CURLE_OK)
+        TEST_EQUAL(curl_exec(curl), CURLE_OK)
+        TEST_EQUAL(curl_close(curl), 1)
+    }
+
 }
 
 public plugin_init()
