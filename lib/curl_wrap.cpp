@@ -72,7 +72,9 @@ CurlOption::CurlOption(CURLoption opt, void* hval) :
     opt(opt), hval(hval), tag(CurlOption::HANDLE) {}
 
 CurlOption::~CurlOption() {
-    delete sval;
+    if (tag == CurlOption::STRING && sval) {
+        delete sval;
+    }
 }
 
 Curl::Curl(CURL* curl) :
@@ -83,6 +85,7 @@ Curl::~Curl() {
     if (curl_ != NULL) {
         curl_easy_cleanup(curl_);
     }
+    ClearOpts();
 }
 
 Curl* Curl::Initialize() {
@@ -224,10 +227,19 @@ CURLcode Curl::Exec() {
     return last_error_;
 }
 
+void Curl::ClearOpts() {
+    CurlOptsListT::iterator iter = opts_.begin();
+    while (iter != opts_.end()) {
+        CurlOption* to_free = *iter;
+        iter = opts_.erase(iter);
+        delete to_free;
+    }
+}
+
 void Curl::Reset() {
     curl_easy_reset(curl_);
     SetDefaultOptions(this);
-    opts_.clear();
+    ClearOpts();
 }
 
 void Curl::UrlEncode(const char* url, ke::AString* out) {

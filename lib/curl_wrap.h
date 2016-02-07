@@ -79,6 +79,7 @@ public:
     Curl* MakeDuplicate();
     CURLcode Exec();
     void Reset();
+    void ClearOpts();
 
     inline const char* StringifyLastError() {
         return curl_easy_strerror(last_error_);
