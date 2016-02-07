@@ -126,6 +126,38 @@ static cell AMX_NATIVE_CALL AMX_CurlDupHandle(AMX* amx, cell* params) {
     return MakeHandle(duplicate, HANDLE_CURL, FreeCurl);
 }
 
+// native curl_escape(Handle:curl, const val[], to[], length)
+static cell AMX_NATIVE_CALL AMX_CurlEscape(AMX* amx, cell* params) {
+    Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
+    if (!curl) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return -1;
+    }
+
+    int len;
+    char* val = MF_GetAmxString(amx, params[2], 0, &len);
+    ke::AString buffer;
+    curl->UrlEncode(val, &buffer);
+
+    return MF_SetAmxString(amx, params[3], buffer.chars(), params[4]);
+}
+
+// native curl_unescape(Handle:curl, const val[], to[], length)
+static cell AMX_NATIVE_CALL AMX_CurlUnescape(AMX* amx, cell* params) {
+    Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
+    if (!curl) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return -1;
+    }
+
+    int len;
+    char* val = MF_GetAmxString(amx, params[2], 0, &len);
+    ke::AString buffer;
+    curl->UrlDecode(val, &buffer);
+
+    return MF_SetAmxString(amx, params[3], buffer.chars(), params[4]);
+}
+
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_init", AMX_CurlInit},
     {"curl_close", AMX_CurlClose},
@@ -136,5 +168,7 @@ AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_setopt_handle", AMX_CurlSetOptHandle},
     {"curl_exec", AMX_CurlExec},
     {"curl_duphandle", AMX_CurlDupHandle},
+    {"curl_escape", AMX_CurlEscape},
+    {"curl_unescape", AMX_CurlUnescape},
     {NULL, NULL}
 };

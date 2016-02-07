@@ -754,3 +754,13 @@ native CURLcode:curl_exec(Handle:curl);
  *
  */
 native Handle:curl_duphandle(Handle:curl);
+
+/**
+ *
+ */
+native curl_escape(Handle:curl, const val[], to[], length)
+
+/**
+ *
+ */
+native curl_unescape(Handle:curl, const val[], to[], length)

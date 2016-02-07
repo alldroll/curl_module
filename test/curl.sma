@@ -14,6 +14,10 @@ new testN = 0
 
 #define TEST_NEQUAL(%1,%2)  TEST_OP(%1,%2,!=)
 
+/**
+ * TODO add description
+ *
+ */
 stock run_test()
 {
     {
@@ -72,6 +76,35 @@ stock run_test()
         TEST_EQUAL(curl_reset(curl), 1);
         TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "localhost"), CURLE_OK)
         TEST_EQUAL(curl_exec(curl), CURLE_OK)
+        TEST_EQUAL(curl_close(curl), 1)
+
+        curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 1010), CURLE_OK)
+        TEST_EQUAL(curl_reset(curl), 1);
+
+        new Handle:dupl = curl_duphandle(curl)
+        TEST_NEQUAL(dupl, INVALID_HANDLE)
+        TEST_EQUAL(curl_setopt_string(dupl, CURLOPT_URL, "http://google.com"), CURLE_OK)
+
+        TEST_EQUAL(curl_close(curl), 1)
+        TEST_EQUAL(curl_exec(dupl), CURLE_OK)
+        TEST_EQUAL(curl_close(dupl), 1)
+    }
+
+    {
+        TEST_INIT("curl escape/unescape")
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+
+        new buf[20]
+        curl_escape(curl, "Hello World", buf, 20)
+        TEST_EQUAL(equal(buf, "Hello%20World"), true)
+
+        curl_unescape(curl, buf, buf, 20)
+        TEST_EQUAL(equal(buf, "Hello World"), true)
+
         TEST_EQUAL(curl_close(curl), 1)
     }
 
