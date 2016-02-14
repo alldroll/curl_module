@@ -20,8 +20,8 @@
 #define MODULE_NAME "Curl"
 #define MODULE_VERSION AMXX_VERSION
 #define MODULE_AUTHOR "alldroll"
-#define MODULE_URL ""
-#define MODULE_LOGTAG "ALLDROLL"
+#define MODULE_URL "https://github.com/alldroll/curl_module"
+#define MODULE_LOGTAG "CURL"
 #define MODULE_LIBRARY "curl"
 #define MODULE_LIBCLASS ""
 // If you want the module not to be reloaded on mapchange, remove / comment out the next line
