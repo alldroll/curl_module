@@ -748,7 +748,7 @@ native CURLcode:curl_setopt_handle(Handle:curl, CURLoption:option, Handle:handle
 /**
  *
  */
-native CURLcode:curl_exec(Handle:curl);
+native CURLcode:curl_exec(Handle:curl, const callback[] = "", any:value = 0);
 
 /**
  *

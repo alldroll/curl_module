@@ -1,9 +1,6 @@
 #include <amxmodx>
 #include <curl>
 
-#define ERROR   0
-#define SUCCESS 1
-
 new testN = 0
 
 #define TEST_INIT(%1)   server_print("[Testing %s]", %1);   testN = 0
@@ -13,6 +10,18 @@ new testN = 0
 #define TEST_EQUAL(%1,%2)  TEST_OP(%1,%2,==)
 
 #define TEST_NEQUAL(%1,%2)  TEST_OP(%1,%2,!=)
+
+stock testResponseExpectedProvider[][] = {
+    "Hello World",
+    "How are you?"
+}
+
+public OnExecComplete(Handle:curl, CURLcode:code, const response[], any:testEN)
+{
+    TEST_NEQUAL(curl, INVALID_HANDLE)
+    TEST_EQUAL(code, CURLE_OK)
+    TEST_EQUAL(equal(testResponseExpectedProvider[testEN], response), true)
+}
 
 /**
  * TODO add description
@@ -104,6 +113,23 @@ stock run_test()
 
         curl_unescape(curl, buf, buf, 20)
         TEST_EQUAL(equal(buf, "Hello World"), true)
+
+        TEST_EQUAL(curl_close(curl), 1)
+    }
+
+    {
+        TEST_INIT("curl exec callback")
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
+
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0"), CURLE_OK)
+        curl_exec(curl, "OnExecComplete", 0)
+
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=1"), CURLE_OK)
+        curl_exec(curl, "OnExecComplete", 1)
 
         TEST_EQUAL(curl_close(curl), 1)
     }

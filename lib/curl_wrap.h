@@ -6,6 +6,8 @@
 #include "am-linkedlist.h"
 #include "opts.h"
 
+#define BUFFER_SIZE 3072
+
 bool inline curl_module_is_option(CURLoption option, int type) {
 #define _(op, t) (op == option && type == t) ||
     return SUPPORTED_OPT_LIST(_) /*||*/ false;
@@ -31,15 +33,28 @@ enum CurlMethodT {
     CURL_IGNORE
 };
 
-struct CurlWrite {
+struct BufferT {
+    char buf[BUFFER_SIZE];
+    int size;
+};
+
+class CurlWrite {
+public:
+    CurlWrite();
+    CurlWrite(CurlWrite&);
+    void Flush();
+
     CurlMethodT method;
-    ke::AString* buffer;
+    BufferT buffer;
     FILE* file;
 };
 
-struct CurlRead {
+class CurlRead {
+public:
+    CurlRead();
+
     CurlMethodT method;
-    ke::AString* buffer;
+    BufferT buffer;
     FILE* file;
 };
 
@@ -93,11 +108,11 @@ public:
         return curl_;
     }
 
-    inline void set_write_data(CurlWrite* write_data) {
+    inline void set_write_data(const CurlWrite& write_data) {
         write_data_ = write_data;
     }
 
-    inline void set_read_data(CurlRead* read_data) {
+    inline void set_read_data(const CurlRead& read_data) {
         read_data_ = read_data;
     }
 
@@ -105,11 +120,11 @@ public:
         last_error_ = error;
     }
 
-    inline CurlRead* read_data() {
+    inline CurlRead& read_data() {
         return read_data_;
     }
 
-    inline CurlWrite* write_data() {
+    inline CurlWrite& write_data() {
         return write_data_;
     }
 
@@ -117,8 +132,8 @@ public:
     void UrlDecode(const char* url, ke::AString* out);
 private:
     CURL* curl_;
-    CurlWrite* write_data_;
-    CurlRead* read_data_;
+    CurlWrite write_data_;
+    CurlRead read_data_;
     CURLcode last_error_;
     CurlOptsListT opts_;
 

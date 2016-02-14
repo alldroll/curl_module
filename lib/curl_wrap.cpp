@@ -5,15 +5,11 @@ static size_t ReadFunction(
 ) {
     size_t length = 0;
     Curl* curl = (Curl*) ctx;
-    CurlRead* curl_read = curl->read_data();
+    CurlRead& curl_read = curl->read_data();
 
-    if (curl_read == NULL) {
-        return length;
-    }
-
-    switch (curl_read->method) {
+    switch (curl_read.method) {
         case CURL_FILE:
-            return fread(data, bytes, nitems, curl_read->file);
+            return fread(data, bytes, nitems, curl_read.file);
 
         case CURL_FROM: { /* TODO */ break; }
 
@@ -28,17 +24,22 @@ static size_t WriteFunction(
 ) {
     size_t length = bytes * nitems;
     Curl* curl = (Curl*) ctx;
-    CurlWrite* curl_write = curl->write_data();
+    CurlWrite& curl_write = curl->write_data();
 
-    if (curl_write == NULL) {
-        return length;
-    }
-
-    switch (curl_write->method) {
+    switch (curl_write.method) {
         case CURL_FILE:
-            return fwrite(data, bytes, nitems, curl_write->file);
+            return fwrite(data, bytes, nitems, curl_write.file);
 
-        case CURL_RETURN: { /* TODO */ break; }
+        case CURL_RETURN: {
+            BufferT* buffer = &curl_write.buffer;
+            int offset = buffer->size;
+            if (offset == BUFFER_SIZE) {
+                curl_write.Flush();
+            }
+
+            snprintf(buffer->buf + offset, BUFFER_SIZE - offset, data);
+            buffer->size += length < BUFFER_SIZE ? length: BUFFER_SIZE;
+        }
 
         default: break; /* ignore case */
     }
@@ -77,9 +78,25 @@ CurlOption::~CurlOption() {
     }
 }
 
-Curl::Curl(CURL* curl) :
-    curl_(curl), write_data_(NULL),
-    read_data_(NULL), last_error_(CURLE_OK) {}
+CurlRead::CurlRead() : method(CURL_IGNORE), file(NULL) {}
+
+CurlWrite::CurlWrite() : method(CURL_RETURN), file(NULL) {
+    buffer.size = 0;
+}
+
+void CurlWrite::Flush() {
+    if (method == CURL_RETURN) {
+        buffer.size = 0;
+    }
+}
+
+CurlWrite::CurlWrite(CurlWrite& other) {
+    //buffer = other.buffer; TODO
+    method = other.method;
+    file = other.file;
+}
+
+Curl::Curl(CURL* curl) : curl_(curl), last_error_(CURLE_OK) {}
 
 Curl::~Curl() {
     if (curl_ != NULL) {

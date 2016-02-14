@@ -98,17 +98,6 @@ static cell AMX_NATIVE_CALL AMX_CurlSetOptHandle(AMX* amx, cell* params) {
     return 0;
 }
 
-// native CURLcode:curl_exec(Handle:h, CURLoption:opt, const val[])
-static cell AMX_NATIVE_CALL AMX_CurlExec(AMX* amx, cell* params) {
-    Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
-    if (!curl) {
-        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
-        return -1;
-    }
-
-    return curl->Exec();
-}
-
 // native Handle:curl_duphandle(Handle:h)
 static cell AMX_NATIVE_CALL AMX_CurlDupHandle(AMX* amx, cell* params) {
     Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
@@ -157,6 +146,45 @@ static cell AMX_NATIVE_CALL AMX_CurlUnescape(AMX* amx, cell* params) {
 
     return MF_SetAmxString(amx, params[3], buffer.chars(), params[4]);
 }
+
+/*
+ * public OnComplete(Handle:curl, CURLcode:code, const response[], any:data)
+ * native CURLcode:curl_exec(Handle:h, const callback[], any:data)
+ */
+static cell AMX_NATIVE_CALL AMX_CurlExec(AMX* amx, cell* params) {
+    Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
+    if (!curl) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return -1;
+    }
+
+    CURLcode code = curl->Exec();
+    CurlWrite& write_data = curl->write_data();
+    int len;
+    const char* callback = MF_GetAmxString(amx, params[2], 0, &len);
+
+    if (write_data.method == CURL_RETURN && strlen(callback) > 0) {
+        int fwd = MF_RegisterSPForwardByName(
+            amx, callback, FP_CELL, FP_CELL, FP_STRING, FP_CELL, FP_DONE
+        );
+        if (fwd < 1) {
+            MF_LogError(amx, AMX_ERR_NATIVE, "Function not found: %s", callback);
+            return -1;
+        }
+
+        MF_ExecuteForward(fwd,
+            params[1],
+            code,
+            write_data.buffer.buf,
+            params[3]
+        );
+        MF_UnregisterSPForward(fwd);
+    }
+
+    write_data.Flush();
+    return code;
+}
+
 
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_init", AMX_CurlInit},
