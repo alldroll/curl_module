@@ -139,5 +139,5 @@ stock run_test()
 public plugin_init()
 {
     register_plugin("curl_unit_test", "1.0", "alldroll")
-    run_test()
+    register_srvcmd("curltest","run_test");
 }

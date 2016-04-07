@@ -3,6 +3,8 @@
 
 #include "amxxmodule.h"
 #include "curl_wrap.h"
+#include "ThreadSupport.h"
+#include "ThreadWorker.h"
 
 enum HandleType
 {
@@ -22,6 +24,6 @@ void FreeAllHandles(HandleType type);
 void FreeHandleTable();
 
 extern AMX_NATIVE_INFO g_BaseCurlNatives[];
-//extern AMX_NATIVE_INFO g_ThreadCurlNatives[];
+extern AMX_NATIVE_INFO g_ThreadCurlNatives[];
 
 #endif

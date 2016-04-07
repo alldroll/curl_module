@@ -172,7 +172,8 @@ static cell AMX_NATIVE_CALL AMX_CurlExec(AMX* amx, cell* params) {
             return -1;
         }
 
-        MF_ExecuteForward(fwd,
+        MF_ExecuteForward(
+            fwd,
             params[1],
             code,
             write_data.buffer.buf,
@@ -184,7 +185,6 @@ static cell AMX_NATIVE_CALL AMX_CurlExec(AMX* amx, cell* params) {
     write_data.Flush();
     return code;
 }
-
 
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_init", AMX_CurlInit},

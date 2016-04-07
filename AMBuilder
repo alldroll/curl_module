@@ -27,6 +27,7 @@ binary.compiler.linkflags += [AMXX.zlib.binary]
 
 binary.sources = [
   'base_curl.cpp',
+  'thread_curl.cpp',
   'handles.cpp',
   'module.cpp',
   'lib/curl_wrap.cpp',

@@ -1,9 +1,9 @@
 #include "amxxmodule.h"
 #include "curl_header.h"
 
-
 void OnAmxxAttach() {
     MF_AddNatives(g_BaseCurlNatives);
+    MF_AddNatives(g_ThreadCurlNatives);
 
     long flags = CURL_GLOBAL_NOTHING;
 #ifdef _WIN32
