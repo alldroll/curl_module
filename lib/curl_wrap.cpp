@@ -22,6 +22,7 @@ static size_t ReadFunction(
 static size_t WriteFunction(
     char* data, size_t bytes, size_t nitems, void* ctx
 ) {
+
     size_t length = bytes * nitems;
     Curl* curl = (Curl*) ctx;
     CurlWrite& curl_write = curl->write_data();
@@ -66,6 +67,16 @@ static void SetDefaultOptions(Curl* ctx) {
 CurlOption::CurlOption(CURLoption opt, ke::AString* sval) :
     opt(opt), sval(sval), tag(CurlOption::STRING) {}
 
+CurlOption::CurlOption(const CurlOption& c) {
+    ival = c.ival;
+    opt = c.opt;
+    hval = c.hval;
+    tag = c.tag;
+    if (tag == CurlOption::STRING && c.sval) {
+        sval = new ke::AString(c.sval->chars());
+    }
+}
+
 CurlOption::CurlOption(CURLoption opt, int ival) :
     opt(opt), ival(ival), tag(CurlOption::CELL) {}
 
@@ -90,18 +101,20 @@ void CurlWrite::Flush() {
     }
 }
 
-CurlWrite::CurlWrite(CurlWrite& other) {
-    //buffer = other.buffer; TODO
+CurlWrite::CurlWrite(const CurlWrite& other) {
     method = other.method;
     file = other.file;
 }
 
-Curl::Curl(CURL* curl) : curl_(curl), last_error_(CURLE_OK) {}
+Curl::Curl(CURL* curl) : curl_(curl), last_error_(CURLE_OK) {
+    opts_.init();
+}
 
 Curl::~Curl() {
     if (curl_ != NULL) {
         curl_easy_cleanup(curl_);
     }
+
     ClearOpts();
 }
 
@@ -159,12 +172,19 @@ CURLcode Curl::SetOptionCell(CURLoption option, int value) {
         case CURLOPT_RESUME_FROM:
         case CURLOPT_TIMEOUT:
         case CURLOPT_TIMEOUT_MS: {
-            CurlOption* pack = new CurlOption(option, value);
-            opts_.prepend(pack);
+            CurlOption pack = CurlOption(option, value);
+            CurlOptsMapT::Result r = opts_.find(option);
+            if (r.found()) {
+                opts_.remove(r);
+            }
+
+            CurlOptsMapT::Insert i = opts_.findForAdd(option);
+            opts_.add(i, option, pack);
             code = curl_easy_setopt(curl_, option, value);
 
             break;
         }
+
         default: break;
     }
 
@@ -187,12 +207,19 @@ CURLcode Curl::SetOptionString(CURLoption option, const char* str) {
         case CURLOPT_URL:
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD: {
-            CurlOption* pack = new CurlOption(option, new ke::AString(str));
-            opts_.prepend(pack);
-            code = curl_easy_setopt(curl_, option, pack->sval->chars());
+            CurlOption pack = CurlOption(option, new ke::AString(str));
+            CurlOptsMapT::Result r = opts_.find(option);
+            if (r.found()) {
+                opts_.remove(r);
+            }
+
+            CurlOptsMapT::Insert i = opts_.findForAdd(option);
+            opts_.add(i, option, pack);
+            code = curl_easy_setopt(curl_, option, pack.sval->chars());
 
             break;
-        };
+        }
+
         default: break;
     }
 
@@ -209,31 +236,29 @@ Curl* Curl::MakeDuplicate() {
     duplicate->set_read_data(read_data_);
     duplicate->set_last_error(last_error_);
 
-    CurlOptsListT::iterator iter = opts_.begin();
-
-    while (iter != opts_.end()) {
-        const CurlOption* val = *iter;
-
-        switch (val->tag) {
+    CurlOptsMapT::iterator iter = opts_.iter();
+    while (!iter.empty()) {
+        const CurlOption& val = iter->value;
+        switch (val.tag) {
             case CURL_OPT_CELL: {
-                duplicate->SetOptionCell(val->opt, val->ival);
+                duplicate->SetOptionCell(val.opt, val.ival);
                 break;
             }
 
             case CURL_OPT_STRING: {
-                duplicate->SetOptionString(val->opt, val->sval->chars());
+                duplicate->SetOptionString(val.opt, val.sval->chars());
                 break;
             }
 
             case CURL_OPT_HANDLE: {
-                duplicate->SetOptionHandle(val->opt, val->hval);
+                duplicate->SetOptionHandle(val.opt, val.hval);
                 break;
             }
 
             default: break;
         }
 
-        iter++;
+        iter.next();
     }
 
     return duplicate;
@@ -245,12 +270,7 @@ CURLcode Curl::Exec() {
 }
 
 void Curl::ClearOpts() {
-    CurlOptsListT::iterator iter = opts_.begin();
-    while (iter != opts_.end()) {
-        CurlOption* to_free = *iter;
-        iter = opts_.erase(iter);
-        delete to_free;
-    }
+    opts_.clear();
 }
 
 void Curl::Reset() {

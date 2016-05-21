@@ -27,6 +27,9 @@ void CurlThread::Clean() {
     }
 
     delete curl_;
+    forward_ = 0;
+    data_ = 0;
+    handle_ = -1;
 }
 
 void CurlThread::SetCurl(Curl* curl) {
@@ -71,7 +74,7 @@ void CurlThread::OnTerminate(IThreadHandle* pHandle, bool cancel) {
     }
 }
 
-void OnFrame() {
+void StartFrame() {
     if (g_Worker && g_QueueLock) {
         g_QueueLock->Lock();
 

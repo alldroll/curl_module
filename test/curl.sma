@@ -23,11 +23,18 @@ public OnExecComplete(Handle:curl, CURLcode:code, const response[], any:testEN)
     TEST_EQUAL(equal(testResponseExpectedProvider[testEN], response), true)
 }
 
+public OnThreadExecComplete(Handle:curl, CURLcode:code, const response[], any:testEN)
+{
+    TEST_NEQUAL(curl, INVALID_HANDLE)
+    TEST_EQUAL(code, CURLE_OK)
+    TEST_EQUAL(equal(testResponseExpectedProvider[testEN], response), true)
+}
+
 /**
  * TODO add description
  *
  */
-stock run_test()
+public run_test()
 {
     {
         TEST_INIT("curl create/destroy")
@@ -143,10 +150,10 @@ stock run_test()
         TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
 
         TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0"), CURLE_OK)
-        curl_thread_exec(curl, "OnExecComplete", 0)
+        curl_thread_exec(curl, "OnThreadExecComplete", 0)
 
         TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=1"), CURLE_OK)
-        curl_thread_exec(curl, "OnExecComplete", 1)
+        curl_thread_exec(curl, "OnThreadExecComplete", 1)
 
         TEST_EQUAL(curl_close(curl), 1)
     }
@@ -155,5 +162,5 @@ stock run_test()
 public plugin_init()
 {
     register_plugin("curl_unit_test", "1.0", "alldroll")
-    register_srvcmd("curltest","run_test");
+    register_srvcmd("curltest", "run_test");
 }

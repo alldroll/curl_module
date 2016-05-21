@@ -3,7 +3,7 @@
 
 #include "curl/curl.h"
 #include "am-string.h"
-#include "am-linkedlist.h"
+#include "am-hashmap.h"
 #include "opts.h"
 
 #define BUFFER_SIZE 3072
@@ -41,7 +41,7 @@ struct BufferT {
 class CurlWrite {
 public:
     CurlWrite();
-    CurlWrite(CurlWrite&);
+    CurlWrite(const CurlWrite&);
     void Flush();
 
     CurlMethodT method;
@@ -60,6 +60,7 @@ public:
 
 class CurlOption {
 public:
+    CurlOption(const CurlOption& c);
     CurlOption(CURLoption opt, ke::AString* sval);
     CurlOption(CURLoption opt, int ival);
     CurlOption(CURLoption opt, void* hval);
@@ -78,7 +79,18 @@ public:
     } tag;
 };
 
-typedef ke::LinkedList<CurlOption*> CurlOptsListT;
+struct CurlOptionPolicy
+{
+    static inline uint32_t hash(const CURLoption& key) {
+        return key;
+    }
+
+    static inline bool matches(const CURLoption& v, const CURLoption &k) {
+        return k == v;
+    }
+};
+
+typedef ke::HashMap<CURLoption, CurlOption, CurlOptionPolicy> CurlOptsMapT;
 
 class Curl {
 public:
@@ -135,7 +147,7 @@ private:
     CurlWrite write_data_;
     CurlRead read_data_;
     CURLcode last_error_;
-    CurlOptsListT opts_;
+    CurlOptsMapT opts_;
 
     Curl(const Curl&);
     void operator=(const Curl&);
