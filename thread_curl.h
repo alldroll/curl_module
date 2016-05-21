@@ -11,8 +11,9 @@ public:
     ~CurlThread();
 
     void SetCurl(Curl* curl);
-    void SetForward(int forward);
+    void SetForward(cell forward);
     void SetCellData(cell data);
+    void SetHandle(cell handle);
     void Execute();
 
     void RunThread(IThreadHandle* pHandle);
@@ -25,6 +26,8 @@ private:
 
     Curl* curl_;
     int forward_;
+    cell handle_;
+    cell data_;
 };
 
 #endif

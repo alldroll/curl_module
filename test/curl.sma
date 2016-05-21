@@ -134,6 +134,22 @@ stock run_test()
         TEST_EQUAL(curl_close(curl), 1)
     }
 
+    {
+        TEST_INIT("curl thread exec callback")
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
+
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0"), CURLE_OK)
+        curl_thread_exec(curl, "OnExecComplete", 0)
+
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=1"), CURLE_OK)
+        curl_thread_exec(curl, "OnExecComplete", 1)
+
+        TEST_EQUAL(curl_close(curl), 1)
+    }
 }
 
 public plugin_init()

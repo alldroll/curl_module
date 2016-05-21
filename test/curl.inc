@@ -753,6 +753,11 @@ native CURLcode:curl_exec(Handle:curl, const callback[] = "", any:value = 0);
 /**
  *
  */
+native CURLcode:curl_thread_exec(Handle:curl, const callback[] = "", any:value = 0);
+
+/**
+ *
+ */
 native Handle:curl_duphandle(Handle:curl);
 
 /**
