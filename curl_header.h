@@ -17,11 +17,12 @@ enum HandleType
 
 typedef void (*FREEHANDLE)(void *, unsigned int);
 
-unsigned int MakeHandle(void *ptr, HandleType type, FREEHANDLE f);
-void *GetHandle(unsigned int num, HandleType type);
-bool FreeHandle(unsigned int num);
-void FreeAllHandles(HandleType type);
-void FreeHandleTable();
+extern unsigned int MakeHandle(void *ptr, HandleType type, FREEHANDLE f);
+extern void *GetHandle(unsigned int num, HandleType type);
+extern bool FreeHandle(unsigned int num);
+extern void FreeAllHandles(HandleType type);
+extern void FreeHandleTable();
+extern void ShutdownThreading();
 
 extern AMX_NATIVE_INFO g_BaseCurlNatives[];
 extern AMX_NATIVE_INFO g_ThreadCurlNatives[];

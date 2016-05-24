@@ -10,18 +10,19 @@ void OnAmxxAttach() {
     flags = CURL_GLOBAL_WIN32;
 #endif
     CURLcode code = curl_global_init(flags);
-    if (code) {
+    if (code != CURLE_OK) {
         /* TODO report error */
     }
 }
 
 void OnAmxxDetach() {
     curl_global_cleanup();
+    ShutdownThreading();
     FreeHandleTable();
 }
 
 void OnPluginsUnloaded() {
-    //FreeAllHandles(HANDLE_CURL); [> TODO maybe not <]
+    FreeAllHandles(HANDLE_CURL);
 }
 
 extern "C" void __cxa_pure_virtual(void) {
