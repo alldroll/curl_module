@@ -763,9 +763,24 @@ native Handle:curl_duphandle(Handle:curl);
 /**
  *
  */
-native curl_escape(Handle:curl, const val[], to[], length)
+native curl_escape(Handle:curl, const val[], to[], length);
 
 /**
  *
  */
-native curl_unescape(Handle:curl, const val[], to[], length)
+native curl_unescape(Handle:curl, const val[], to[], length);
+
+/**
+ *
+ */
+native Handle:curl_create_slist();
+
+/**
+ *
+ */
+native curl_destroy_slist(Handle:slist);
+
+/**
+ *
+ */
+native curl_slist_append(Handle:slist, const str[]);

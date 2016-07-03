@@ -13,7 +13,8 @@ new testN = 0
 
 stock testResponseExpectedProvider[][] = {
     "Hello World",
-    "How are you?"
+    "How are you?",
+    "TODO test header"
 }
 
 public OnExecComplete(Handle:curl, CURLcode:code, const response[], any:testEN)
@@ -156,6 +157,34 @@ public run_test()
         curl_thread_exec(curl, "OnThreadExecComplete", 1)
 
         TEST_EQUAL(curl_close(curl), 1)
+    }
+
+    {
+        TEST_INIT("curl_slist test create/destroy")
+
+        new Handle:slist = curl_create_slist();
+        TEST_NEQUAL(slist, INVALID_HANDLE);
+
+        TEST_EQUAL(curl_slist_append(slist, "test_str"), 1)
+        TEST_EQUAL(curl_slist_append(slist, "test_str2"), 1)
+
+        TEST_EQUAL(curl_destroy_slist(slist), 1)
+    }
+
+    {
+        TEST_INIT("curl add header opt")
+
+        new Handle:chunk = curl_create_slist();
+        TEST_NEQUAL(chunk, INVALID_HANDLE);
+        TEST_EQUAL(curl_slist_append(chunk, "Referer: http://www.example.com/index.php"), 1)
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
+
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=2"), CURLE_OK)
+        curl_exec(curl, "OnExecComplete", 2)
     }
 }
 

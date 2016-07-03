@@ -131,7 +131,27 @@ Curl* Curl::Initialize() {
 }
 
 CURLcode Curl::SetOptionHandle(CURLoption option, void* handle) {
-    return CURLE_OK;
+    CURLcode code = CURLE_OK;
+    switch (option) {
+        case CURLOPT_HEADER: {
+            CurlSList* wrapper = (CurlSList*) handle;
+            code = curl_easy_setopt(curl_, option, wrapper->slist);
+            break;
+        }
+    }
+
+    if (code == CURLE_OK) {
+        CurlOption pack = CurlOption(option, handle);
+        CurlOptsMapT::Result r = opts_.find(option);
+        if (r.found()) {
+            opts_.remove(r);
+        }
+
+        CurlOptsMapT::Insert i = opts_.findForAdd(option);
+        opts_.add(i, option, pack);
+    }
+
+    return code;
 }
 
 CURLcode Curl::SetOptionCell(CURLoption option, int value) {

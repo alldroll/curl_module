@@ -2,7 +2,8 @@
 
 $responses = [
     'Hello World',
-    'How are you?'
+    'How are you?',
+    'Header test'
 ];
 
 ob_start();

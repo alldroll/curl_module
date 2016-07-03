@@ -7,6 +7,11 @@ static void FreeCurl(void* p, unsigned int num) {
     delete curl;
 }
 
+static void FreeSList(void* p, unsigned int num) {
+    CurlSList* slist = (CurlSList*) p;
+    delete slist;
+}
+
 // native Handle:curl_init();
 static cell AMX_NATIVE_CALL AMX_CurlInit(AMX* amx, cell* params) {
     Curl* curl = Curl::Initialize();
@@ -93,8 +98,31 @@ static cell AMX_NATIVE_CALL AMX_CurlSetOptString(AMX* amx, cell* params) {
     return curl->SetOptionString(opt, val);
 }
 
-// native CURLcode:curl_setopt_handle(Handle:h, CURLoption:opt, const val[])
+// native CURLcode:curl_setopt_handle(Handle:h, CURLoption:opt, Handle:val)
 static cell AMX_NATIVE_CALL AMX_CurlSetOptHandle(AMX* amx, cell* params) {
+    Curl* curl = (Curl*)GetHandle(params[1], HANDLE_CURL);
+    if (!curl) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return -1;
+    }
+
+    CURLoption opt = (CURLoption)params[2];
+    if (!curl_module_is_handle_option(opt)) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Unsupported handle option: %d", opt);
+        return -1;
+    }
+
+    switch (opt) {
+        case CURLOPT_HEADER: {
+            void* val = GetHandle(params[3], HANDLE_CURL_SLIST);
+            if (!val) {
+                return -1;
+            }
+
+            return curl->SetOptionHandle(opt, val);
+        }
+    }
+
     return 0;
 }
 
@@ -186,6 +214,42 @@ static cell AMX_NATIVE_CALL AMX_CurlExec(AMX* amx, cell* params) {
     return code;
 }
 
+// native Handle:curl_create_slist()
+static cell AMX_NATIVE_CALL AMX_CurlCreateSList(AMX* amx, cell* params) {
+    CurlSList* slist = new CurlSList();
+    if (!slist) { /* is it ok ? */
+        MF_LogError(amx, AMX_ERR_NATIVE, "Couldn't alloc curl handle");
+        return -1;
+    }
+
+    return MakeHandle(slist, HANDLE_CURL_SLIST, FreeSList);
+}
+
+// native curl_destroy_slist(Handle:slist)
+static cell AMX_NATIVE_CALL AMX_CurlDestroySList(AMX* amx, cell* params) {
+    bool success = true;
+    if (!FreeHandle(params[1])) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        success = false;
+    }
+
+    return success;
+}
+
+// native curl_slist_append(Handle:slist, const str[])
+static cell AMX_NATIVE_CALL AMX_CurlSListAppend(AMX* amx, cell* params) {
+    CurlSList* handle = (CurlSList*)GetHandle(params[1], HANDLE_CURL_SLIST);
+    if (!handle) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return false;
+    }
+
+    int len;
+    char* str = MF_GetAmxString(amx, params[2], 0, &len);
+    handle->slist = curl_slist_append(handle->slist, str);
+    return true;
+}
+
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_init", AMX_CurlInit},
     {"curl_close", AMX_CurlClose},
@@ -198,5 +262,8 @@ AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_duphandle", AMX_CurlDupHandle},
     {"curl_escape", AMX_CurlEscape},
     {"curl_unescape", AMX_CurlUnescape},
+    {"curl_create_slist", AMX_CurlCreateSList},
+    {"curl_destroy_slist", AMX_CurlDestroySList},
+    {"curl_slist_append", AMX_CurlSListAppend},
     {NULL, NULL}
 };
