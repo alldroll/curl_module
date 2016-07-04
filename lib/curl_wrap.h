@@ -26,14 +26,18 @@ extern bool inline curl_module_is_string_option(CURLoption option) {
     return curl_module_is_option(option, CURL_OPT_STRING);
 }
 
-struct CurlSList {
-    curl_slist* slist;
-    CurlSList() {
-        slist = new curl_slist();
+class CurlSList {
+public:
+    CurlSList(curl_slist* _slist) {
+        slist = _slist;
     }
     ~CurlSList() {
-        curl_slist_free_all(slist);
+        if (slist) {
+            curl_slist_free_all(slist);
+        }
     }
+
+    curl_slist* slist;
 };
 
 enum CurlMethodT {

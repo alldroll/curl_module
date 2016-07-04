@@ -113,7 +113,7 @@ static cell AMX_NATIVE_CALL AMX_CurlSetOptHandle(AMX* amx, cell* params) {
     }
 
     switch (opt) {
-        case CURLOPT_HEADER: {
+        case CURLOPT_HTTPHEADER: {
             void* val = GetHandle(params[3], HANDLE_CURL_SLIST);
             if (!val) {
                 return -1;
@@ -216,7 +216,7 @@ static cell AMX_NATIVE_CALL AMX_CurlExec(AMX* amx, cell* params) {
 
 // native Handle:curl_create_slist()
 static cell AMX_NATIVE_CALL AMX_CurlCreateSList(AMX* amx, cell* params) {
-    CurlSList* slist = new CurlSList();
+    CurlSList* slist = new CurlSList(NULL);
     if (!slist) { /* is it ok ? */
         MF_LogError(amx, AMX_ERR_NATIVE, "Couldn't alloc curl handle");
         return -1;

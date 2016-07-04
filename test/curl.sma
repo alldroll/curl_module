@@ -11,24 +11,46 @@ new testN = 0
 
 #define TEST_NEQUAL(%1,%2)  TEST_OP(%1,%2,!=)
 
-stock testResponseExpectedProvider[][] = {
-    "Hello World",
-    "How are you?",
-    "TODO test header"
+/*
+ * TODO use TestT
+ * Add doc
+ */
+
+enum TestT
+{
+    PERFORM = 0,
+    T_PERFORM,
+    HTTP_HEADER
+};
+
+stock testPerformProvider[][] = {
+    "Perform test 0",
+    "Perform test 1"
+}
+
+stock testTPerformProvider[][] = {
+    "Thread test 0",
+    "Thread test 1"
 }
 
 public OnExecComplete(Handle:curl, CURLcode:code, const response[], any:testEN)
 {
     TEST_NEQUAL(curl, INVALID_HANDLE)
     TEST_EQUAL(code, CURLE_OK)
-    TEST_EQUAL(equal(testResponseExpectedProvider[testEN], response), true)
+    TEST_EQUAL(equal(testPerformProvider[testEN], response), true)
 }
 
 public OnThreadExecComplete(Handle:curl, CURLcode:code, const response[], any:testEN)
 {
     TEST_NEQUAL(curl, INVALID_HANDLE)
     TEST_EQUAL(code, CURLE_OK)
-    TEST_EQUAL(equal(testResponseExpectedProvider[testEN], response), true)
+    TEST_EQUAL(equal(testTPerformProvider[testEN], response), true)
+}
+
+public OnCheckOkComplete(Handle:curl, CURLcode:code, const response[], any:testEN)
+{
+    TEST_EQUAL(code, CURLE_OK)
+    TEST_EQUAL(equal("ok", response), true)
 }
 
 /**
@@ -150,10 +172,10 @@ public run_test()
 
         TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
 
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0"), CURLE_OK)
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0&type=1"), CURLE_OK)
         curl_thread_exec(curl, "OnThreadExecComplete", 0)
 
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=1"), CURLE_OK)
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=1&type=1"), CURLE_OK)
         curl_thread_exec(curl, "OnThreadExecComplete", 1)
 
         TEST_EQUAL(curl_close(curl), 1)
@@ -176,15 +198,23 @@ public run_test()
 
         new Handle:chunk = curl_create_slist();
         TEST_NEQUAL(chunk, INVALID_HANDLE);
-        TEST_EQUAL(curl_slist_append(chunk, "Referer: http://www.example.com/index.php"), 1)
+        TEST_EQUAL(curl_slist_append(chunk, "Cookie: ID=1234"), 1)
 
         new Handle:curl = curl_init()
         TEST_NEQUAL(curl, INVALID_HANDLE)
 
         TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
 
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=2"), CURLE_OK)
-        curl_exec(curl, "OnExecComplete", 2)
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0&type=2"), CURLE_OK)
+        TEST_EQUAL(curl_setopt_handle(curl, CURLOPT_HTTPHEADER, chunk), CURLE_OK)
+
+        curl_exec(curl, "OnCheckOkComplete")
+
+        TEST_EQUAL(curl_close(curl), 1)
+
+        /* WARNING! you have to destory slist after thread_exec complete */
+        /* maybe create slist copy for threaded exec? */
+        TEST_EQUAL(curl_destroy_slist(chunk), 1)
     }
 }
 

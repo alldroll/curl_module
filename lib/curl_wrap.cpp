@@ -133,7 +133,7 @@ Curl* Curl::Initialize() {
 CURLcode Curl::SetOptionHandle(CURLoption option, void* handle) {
     CURLcode code = CURLE_OK;
     switch (option) {
-        case CURLOPT_HEADER: {
+        case CURLOPT_HTTPHEADER: {
             CurlSList* wrapper = (CurlSList*) handle;
             code = curl_easy_setopt(curl_, option, wrapper->slist);
             break;
