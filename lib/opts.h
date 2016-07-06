@@ -49,6 +49,7 @@
   _(CURLOPT_TIMEOUT,                  CURL_OPT_CELL)                           \
   _(CURLOPT_TIMEOUT_MS,               CURL_OPT_CELL)                           \
 /*string options*/                                                             \
+  _(CURLOPT_POSTFIELDS,               CURL_OPT_STRING)                         \
   _(CURLOPT_COOKIE,                   CURL_OPT_STRING)                         \
   _(CURLOPT_COOKIEFILE,               CURL_OPT_STRING)                         \
   _(CURLOPT_COOKIEJAR,                CURL_OPT_STRING)                         \
@@ -62,14 +63,12 @@
   _(CURLOPT_USERAGENT,                CURL_OPT_STRING)                         \
   _(CURLOPT_USERPWD,                  CURL_OPT_STRING)                         \
 /*handle options*/                                                             \
-  _(CURLOPT_POSTFIELDS,               CURL_OPT_HANDLE)                         \
   _(CURLOPT_WRITEDATA,                CURL_OPT_HANDLE)                         \
   _(CURLOPT_READDATA,                 CURL_OPT_HANDLE)                         \
   _(CURLOPT_WRITEHEADER,              CURL_OPT_HANDLE)                         \
   _(CURLOPT_HTTPHEADER,               CURL_OPT_HANDLE)                         \
   _(CURLOPT_HTTP200ALIASES,           CURL_OPT_HANDLE)                         \
   _(CURLOPT_HTTPPOST,                 CURL_OPT_HANDLE)                         \
-  _(CURLOPT_COPYPOSTFIELDS,           CURL_OPT_HANDLE)
 
 
 #endif

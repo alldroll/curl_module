@@ -18,9 +18,10 @@ new testN = 0
 
 enum TestT
 {
-    PERFORM = 0,
-    T_PERFORM,
-    HTTP_HEADER
+    TEST_PERFORM = 0,
+    TEST_T_PERFORM,
+    TEST_HTTPHEADER,
+    TEST_POSTFIELDS
 };
 
 stock testPerformProvider[][] = {
@@ -31,6 +32,13 @@ stock testPerformProvider[][] = {
 stock testTPerformProvider[][] = {
     "Thread test 0",
     "Thread test 1"
+}
+
+public CURLcode:helperSetUrl(Handle:curl, testN, TestT:type)
+{
+    new url[120]
+    format(url, 120, "http://localhost/?testEN=%d&type=%d", testN, type)
+    return curl_setopt_string(curl, CURLOPT_URL, url)
 }
 
 public OnExecComplete(Handle:curl, CURLcode:code, const response[], any:testEN)
@@ -155,10 +163,10 @@ public run_test()
 
         TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
 
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0"), CURLE_OK)
+        TEST_EQUAL(helperSetUrl(curl, 0, TEST_PERFORM), CURLE_OK)
         curl_exec(curl, "OnExecComplete", 0)
 
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=1"), CURLE_OK)
+        TEST_EQUAL(helperSetUrl(curl, 1, TEST_PERFORM), CURLE_OK)
         curl_exec(curl, "OnExecComplete", 1)
 
         TEST_EQUAL(curl_close(curl), 1)
@@ -172,10 +180,10 @@ public run_test()
 
         TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
 
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0&type=1"), CURLE_OK)
+        TEST_EQUAL(helperSetUrl(curl, 0, TEST_T_PERFORM), CURLE_OK)
         curl_thread_exec(curl, "OnThreadExecComplete", 0)
 
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=1&type=1"), CURLE_OK)
+        TEST_EQUAL(helperSetUrl(curl, 1, TEST_T_PERFORM), CURLE_OK)
         curl_thread_exec(curl, "OnThreadExecComplete", 1)
 
         TEST_EQUAL(curl_close(curl), 1)
@@ -205,7 +213,7 @@ public run_test()
 
         TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
 
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "http://localhost/?testEN=0&type=2"), CURLE_OK)
+        TEST_EQUAL(helperSetUrl(curl, 0, TEST_HTTPHEADER), CURLE_OK)
         TEST_EQUAL(curl_setopt_handle(curl, CURLOPT_HTTPHEADER, chunk), CURLE_OK)
 
         curl_exec(curl, "OnCheckOkComplete")
@@ -215,6 +223,20 @@ public run_test()
         /* WARNING! you have to destory slist after thread_exec complete */
         /* maybe create slist copy for threaded exec? */
         TEST_EQUAL(curl_destroy_slist(chunk), 1)
+    }
+
+    {
+        TEST_INIT("curl post field test")
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
+        TEST_EQUAL(helperSetUrl(curl, 0, TEST_POSTFIELDS), CURLE_OK)
+        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_POSTFIELDS, "postfield=postvalue"), CURLE_OK)
+
+        curl_exec(curl, "OnCheckOkComplete")
+        TEST_EQUAL(curl_close(curl), 1)
     }
 }
 

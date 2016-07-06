@@ -227,21 +227,28 @@ CURLcode Curl::SetOptionString(CURLoption option, const char* str) {
         case CURLOPT_URL:
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD: {
-            CurlOption pack = CurlOption(option, new ke::AString(str));
-            CurlOptsMapT::Result r = opts_.find(option);
-            if (r.found()) {
-                opts_.remove(r);
-            }
+            /* */
+            break;
+        }
 
-            CurlOptsMapT::Insert i = opts_.findForAdd(option);
-            opts_.add(i, option, pack);
-            code = curl_easy_setopt(curl_, option, pack.sval->chars());
-
+        case CURLOPT_POSTFIELDS: {
+            /* force curl copy postfields */
+            option = CURLOPT_COPYPOSTFIELDS;
             break;
         }
 
         default: break;
     }
+
+    CurlOption pack = CurlOption(option, new ke::AString(str));
+    CurlOptsMapT::Result r = opts_.find(option);
+    if (r.found()) {
+        opts_.remove(r);
+    }
+
+    CurlOptsMapT::Insert i = opts_.findForAdd(option);
+    opts_.add(i, option, pack);
+    code = curl_easy_setopt(curl_, option, pack.sval->chars());
 
     return code;
 }
