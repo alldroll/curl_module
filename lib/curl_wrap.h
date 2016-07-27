@@ -72,40 +72,6 @@ public:
     FILE* file;
 };
 
-class CurlOption {
-public:
-    CurlOption(const CurlOption& c);
-    CurlOption(CURLoption opt, ke::AString* sval);
-    CurlOption(CURLoption opt, int ival);
-    CurlOption(CURLoption opt, void* hval);
-    ~CurlOption();
-
-    CURLoption opt;
-    union {
-        ke::AString* sval;
-        int ival;
-        void* hval;
-    };
-    enum {
-        CELL = CURL_OPT_CELL,
-        STRING = CURL_OPT_STRING,
-        HANDLE = CURL_OPT_HANDLE
-    } tag;
-};
-
-struct CurlOptionPolicy
-{
-    static inline uint32_t hash(const CURLoption& key) {
-        return key;
-    }
-
-    static inline bool matches(const CURLoption& v, const CURLoption &k) {
-        return k == v;
-    }
-};
-
-typedef ke::HashMap<CURLoption, CurlOption, CurlOptionPolicy> CurlOptsMapT;
-
 class Curl {
 public:
     Curl(CURL* curl);
@@ -120,7 +86,6 @@ public:
     Curl* MakeDuplicate();
     CURLcode Exec();
     void Reset();
-    void ClearOpts();
 
     inline const char* StringifyLastError() {
         return curl_easy_strerror(last_error_);
@@ -161,7 +126,6 @@ private:
     CurlWrite write_data_;
     CurlRead read_data_;
     CURLcode last_error_;
-    CurlOptsMapT opts_;
 
     Curl(const Curl&);
     void operator=(const Curl&);
