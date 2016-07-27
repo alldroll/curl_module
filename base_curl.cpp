@@ -12,6 +12,11 @@ static void FreeSList(void* p, unsigned int num) {
     delete slist;
 }
 
+static void FreeForm(void* p, unsigned int num) {
+    CurlWebForm* form = (CurlWebForm*) p;
+    delete form;
+}
+
 // native Handle:curl_init();
 static cell AMX_NATIVE_CALL AMX_CurlInit(AMX* amx, cell* params) {
     Curl* curl = Curl::Initialize();
@@ -250,6 +255,28 @@ static cell AMX_NATIVE_CALL AMX_CurlSListAppend(AMX* amx, cell* params) {
     return true;
 }
 
+// native Handle:curl_create_form()
+static cell AMX_NATIVE_CALL AMX_CurlCreateForm(AMX* amx, cell* params) {
+    CurlWebForm* form = new CurlWebForm();
+    if (!form) { /* is it ok ? */
+        MF_LogError(amx, AMX_ERR_NATIVE, "Couldn't alloc curl handle");
+        return -1;
+    }
+
+    return MakeHandle(form, HANDLE_CURL_FORM, FreeForm);
+}
+
+// native curl_destroy_form(Handle:form)
+static cell AMX_NATIVE_CALL AMX_CurlDestroyForm(AMX* amx, cell* params) {
+    bool success = true;
+    if (!FreeHandle(params[1])) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        success = false;
+    }
+
+    return success;
+}
+
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_init", AMX_CurlInit},
     {"curl_close", AMX_CurlClose},
@@ -265,5 +292,7 @@ AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_create_slist", AMX_CurlCreateSList},
     {"curl_destroy_slist", AMX_CurlDestroySList},
     {"curl_slist_append", AMX_CurlSListAppend},
+    {"curl_create_form", AMX_CurlCreateForm},
+    {"curl_destroy_form", AMX_CurlDestroyForm},
     {NULL, NULL}
 };

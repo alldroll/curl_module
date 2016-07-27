@@ -40,6 +40,26 @@ public:
     curl_slist* slist;
 };
 
+class CurlWebForm {
+public:
+    CurlWebForm();
+    ~CurlWebForm();
+
+    CURLFORMcode get_last_error() {
+        return last_error_;
+    }
+
+    curl_httppost* GetFormData();
+    bool AddString(const char* name, const char* data);
+    bool AddFile(const char* name, const char* path);
+    /* todo addarray ... */
+
+private:
+    curl_httppost* first_;
+    curl_httppost* last_;
+    CURLFORMcode last_error_;
+};
+
 enum CurlMethodT {
     CURL_FILE,
     CURL_RETURN,
