@@ -26,6 +26,24 @@ extern bool inline curl_module_is_string_option(CURLoption option) {
     return curl_module_is_option(option, CURL_OPT_STRING);
 }
 
+bool inline curl_module_form_is_option(CURLformoption option, int type) {
+#define _(op, t) (op == option && type == t) ||
+    return SUPPORTED_FORM_OPT_LIST(_) /*||*/ false;
+#undef _
+}
+
+extern bool inline curl_module_form_is_cell_option(CURLformoption option) {
+    return curl_module_form_is_option(option, CURL_OPT_CELL);
+}
+
+extern bool inline curl_module_form_is_handle_option(CURLformoption option) {
+    return curl_module_form_is_option(option, CURL_OPT_HANDLE);
+}
+
+extern bool inline curl_module_form_is_string_option(CURLformoption option) {
+    return curl_module_form_is_option(option, CURL_OPT_STRING);
+}
+
 class CurlSList {
 public:
     CurlSList(curl_slist* _slist) {

@@ -81,7 +81,7 @@ curl_httppost* CurlWebForm::GetFormData() {
 
 bool CurlWebForm::AddString(const char* name, const char* data) {
     last_error_ = curl_formadd(
-        &first_
+        &first_,
         &last_,
         CURLFORM_COPYNAME,
         name,
@@ -91,9 +91,6 @@ bool CurlWebForm::AddString(const char* name, const char* data) {
     );
 
     return last_error_ == CURL_FORMADD_OK;
-}
-
-bool WebForm::AddFile(const char *name, const char *path)
 }
 
 bool CurlWebForm::AddFile(const char* name, const char* path) {

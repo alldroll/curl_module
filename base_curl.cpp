@@ -277,6 +277,39 @@ static cell AMX_NATIVE_CALL AMX_CurlDestroyForm(AMX* amx, cell* params) {
     return success;
 }
 
+// native curl_form_add(Handle:form, any:...)
+static cell AMX_NATIVE_CALL AMX_CurlFormAdd(AMX* amx, cell* params) {
+    CurlWebForm* form = (CurlWebForm*)GetHandle(params[1], HANDLE_CURL_FORM);
+    if (!form) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return false;
+    }
+
+    CURLFORMcode result = CURL_FORMADD_INCOMPLETE;
+    unsigned int params_number = params[0], i = 2, j = 0;
+
+    for (; i < params_number; ++i) {
+        CURLformoption opt = (CURLformoption)params[i];
+
+        if (CURLFORM_END == opt) {
+            break;
+        }
+
+        if (curl_module_form_is_cell_option(opt)) {
+
+        } else if (curl_module_form_is_string_option(opt)) {
+
+        } else if (curl_module_form_is_handle_option(opt)) {
+
+        } else {
+            result = CURL_FORMADD_INCOMPLETE;
+            break;
+        }
+    }
+
+    return result;
+}
+
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_init", AMX_CurlInit},
     {"curl_close", AMX_CurlClose},
