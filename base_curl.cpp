@@ -279,31 +279,47 @@ static cell AMX_NATIVE_CALL AMX_CurlDestroyForm(AMX* amx, cell* params) {
 
 // native curl_form_add(Handle:form, any:...)
 static cell AMX_NATIVE_CALL AMX_CurlFormAdd(AMX* amx, cell* params) {
-    CurlWebForm* form = (CurlWebForm*)GetHandle(params[1], HANDLE_CURL_FORM);
+    cell handle = *MF_GetAmxAddr(amx, params[1]);
+    CurlWebForm* form = (CurlWebForm*)GetHandle(handle, HANDLE_CURL_FORM);
     if (!form) {
-        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", handle);
         return false;
     }
 
     CURLFORMcode result = CURL_FORMADD_INCOMPLETE;
-    unsigned int params_number = params[0], i = 2, j = 0;
+    unsigned int params_number = *MF_GetAmxAddr(amx, params[0]), i = 2, j = 0;
 
     for (; i < params_number; ++i) {
-        CURLformoption opt = (CURLformoption)params[i];
+        cell part1 = *MF_GetAmxAddr(amx, params[i]);
+        CURLformoption opt = (CURLformoption)part1;
 
         if (CURLFORM_END == opt) {
             break;
         }
 
+        if (MF_GetAmxAddr(amx, params[++i]) == NULL) {
+            return CURL_FORMADD_INCOMPLETE;
+        }
+
+        cell part2 = *MF_GetAmxAddr(amx, params[i]);
+
         if (curl_module_form_is_cell_option(opt)) {
-
+            form->SetOptionCell(opt, part2);
         } else if (curl_module_form_is_string_option(opt)) {
-
+            int len;
+            char* val = MF_GetAmxString(amx, part2, 0, &len);
+            form->SetOptionString(opt, val);
         } else if (curl_module_form_is_handle_option(opt)) {
+            if (opt == CURLFORM_CONTENTHEADER) {
 
+            }
         } else {
             result = CURL_FORMADD_INCOMPLETE;
             break;
+        }
+
+        if (form->last_error() != CURL_FORMADD_OK) {
+            return form->last_error();
         }
     }
 
@@ -327,5 +343,6 @@ AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_slist_append", AMX_CurlSListAppend},
     {"curl_create_form", AMX_CurlCreateForm},
     {"curl_destroy_form", AMX_CurlDestroyForm},
+    {"curl_form_add", AMX_CurlFormAdd},
     {NULL, NULL}
 };

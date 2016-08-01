@@ -63,14 +63,14 @@ public:
     CurlWebForm();
     ~CurlWebForm();
 
-    CURLFORMcode get_last_error() {
+    CURLFORMcode last_error() {
         return last_error_;
     }
 
     curl_httppost* GetFormData();
-    bool AddString(const char* name, const char* data);
-    bool AddFile(const char* name, const char* path);
-    /* todo addarray ... */
+    bool SetOptionString(CURLformoption opt, const char* data);
+    bool SetOptionCell(CURLformoption opt, int data);
+    bool SetOptionHandle(CURLformoption opt, void* data);
 
 private:
     curl_httppost* first_;

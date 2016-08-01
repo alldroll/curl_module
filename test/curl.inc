@@ -710,6 +710,53 @@ enum CURLoption {
     CURLOPT_LASTENTRY /* the last unused */
 };
 
+enum CURLFORMcode {
+  CURL_FORMADD_OK, /* first, no error */
+
+  CURL_FORMADD_MEMORY,
+  CURL_FORMADD_OPTION_TWICE,
+  CURL_FORMADD_NULL,
+  CURL_FORMADD_UNKNOWN_OPTION,
+  CURL_FORMADD_INCOMPLETE,
+  CURL_FORMADD_ILLEGAL_ARRAY,
+  CURL_FORMADD_DISABLED, /* libcurl was built with this disabled */
+
+  CURL_FORMADD_LAST /* last */
+};
+
+#define CFINIT(%1) CURLFORM_%1
+
+enum CURLformoption {
+  CFINIT(NOTHING),        /********* the first one is unused ************/
+
+  /*  */
+  CFINIT(COPYNAME),
+  CFINIT(PTRNAME),
+  CFINIT(NAMELENGTH),
+  CFINIT(COPYCONTENTS),
+  CFINIT(PTRCONTENTS),
+  CFINIT(CONTENTSLENGTH),
+  CFINIT(FILECONTENT),
+  CFINIT(ARRAY),
+  CFINIT(OBSOLETE),
+  CFINIT(FILE),
+
+  CFINIT(BUFFER),
+  CFINIT(BUFFERPTR),
+  CFINIT(BUFFERLENGTH),
+
+  CFINIT(CONTENTTYPE),
+  CFINIT(CONTENTHEADER),
+  CFINIT(FILENAME),
+  CFINIT(END),
+  CFINIT(OBSOLETE2),
+
+  CFINIT(STREAM),
+
+  CURLFORM_LASTENTRY /* the last unused */
+};
+
+
 /**
  * Initialize a cUrl session
  * @return Handle
@@ -765,6 +812,7 @@ native CURLcode:curl_setopt_string(Handle:ch, CURLoption:option, const value[]);
  * @return CURLcode
  */
 native CURLcode:curl_setopt_handle(Handle:ch, CURLoption:option, Handle:handle);
+
 
 /**
  * Callback used by curl_exec, curl_thread_exec
@@ -841,3 +889,15 @@ native curl_destroy_slist(Handle:slist);
  * @return True on success, otherwise False
  */
 native curl_slist_append(Handle:slist, const str[]);
+
+/**
+ */
+native Handle:curl_create_form();
+
+/**
+ */
+native Handle:curl_destroy_form(Handle:form);
+
+/**
+ */
+native CURLFORMcode:curl_form_add(Handle:form, any:...);

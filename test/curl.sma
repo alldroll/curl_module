@@ -238,10 +238,37 @@ public run_test()
         curl_exec(curl, "OnCheckOkComplete")
         TEST_EQUAL(curl_close(curl), 1)
     }
+
+    {
+        TEST_INIT("curl form create/destroy")
+
+        new Handle:form = curl_create_form()
+        TEST_NEQUAL(form, INVALID_HANDLE)
+
+        TEST_EQUAL(curl_destroy_form(form), 1)
+    }
+
+    {
+        TEST_INIT("curl form add")
+        new Handle:form = curl_create_form()
+
+        new CURLFORMcode:code = curl_form_add(
+            form,
+            CURLFORM_COPYNAME,
+            "htmlcode",
+            CURLFORM_COPYCONTENTS,
+            "<HTML></HTML>",
+            CURLFORM_CONTENTTYPE,
+            "text/html",
+            CURLFORM_END
+        )
+
+        TEST_EQUAL(code, CURL_FORMADD_OK)
+    }
 }
 
 public plugin_init()
 {
     register_plugin("curl_unit_test", "1.0", "alldroll")
-    register_srvcmd("curltest", "run_test");
+    register_srvcmd("curltest", "run_test")
 }

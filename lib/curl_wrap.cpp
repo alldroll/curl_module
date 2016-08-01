@@ -79,13 +79,11 @@ curl_httppost* CurlWebForm::GetFormData() {
     return first_;
 }
 
-bool CurlWebForm::AddString(const char* name, const char* data) {
+bool CurlWebForm::SetOptionCell(CURLformoption opt, int data) {
     last_error_ = curl_formadd(
         &first_,
         &last_,
-        CURLFORM_COPYNAME,
-        name,
-        CURLFORM_COPYCONTENTS,
+        opt,
         data,
         CURLFORM_END
     );
@@ -93,14 +91,24 @@ bool CurlWebForm::AddString(const char* name, const char* data) {
     return last_error_ == CURL_FORMADD_OK;
 }
 
-bool CurlWebForm::AddFile(const char* name, const char* path) {
+bool CurlWebForm::SetOptionString(CURLformoption opt, const char* data) {
     last_error_ = curl_formadd(
         &first_,
         &last_,
-        CURLFORM_COPYNAME,
-        name,
-        CURLFORM_FILE,
-        path,
+        opt,
+        data,
+        CURLFORM_END
+    );
+
+    return last_error_ == CURL_FORMADD_OK;
+}
+
+bool CurlWebForm::SetOptionHandle(CURLformoption opt, void* data) {
+    last_error_ = curl_formadd(
+        &first_,
+        &last_,
+        opt,
+        data,
         CURLFORM_END
     );
 
