@@ -8,6 +8,7 @@ class TestT
     const T_PERFORM = 1;
     const HTTP_HEADER = 2;
     const POSTFIELDS = 3;
+    const HTTP_POST = 4;
 }
 
 $type = isset($_REQUEST['type']) ? $_REQUEST['type'] : TestT::PERFORM;
@@ -43,6 +44,16 @@ switch ($type) {
 
     case TestT::POSTFIELDS:
         $success = isset($_POST['postfield']) && $_POST['postfield'] === 'postvalue';
+        if ($success) {
+            echo 'ok';
+        } else {
+            echo 'bad';
+        }
+
+        break;
+
+    case TestT::HTTP_POST:
+        $success = isset($_POST['submit']) && $_POST['submit'] === 'send';
         if ($success) {
             echo 'ok';
         } else {

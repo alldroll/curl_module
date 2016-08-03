@@ -3,7 +3,6 @@
 
 #include "curl/curl.h"
 #include "am-string.h"
-#include "am-hashmap.h"
 #include "opts.h"
 
 #define BUFFER_SIZE 3072
@@ -68,9 +67,7 @@ public:
     }
 
     curl_httppost* GetFormData();
-    bool SetOptionString(CURLformoption opt, const char* data);
-    bool SetOptionCell(CURLformoption opt, int data);
-    bool SetOptionHandle(CURLformoption opt, void* data);
+    bool SetArray(const curl_forms* arr);
 
 private:
     curl_httppost* first_;

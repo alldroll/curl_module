@@ -21,7 +21,8 @@ enum TestT
     TEST_PERFORM = 0,
     TEST_T_PERFORM,
     TEST_HTTPHEADER,
-    TEST_POSTFIELDS
+    TEST_POSTFIELDS,
+    TEST_FORM
 };
 
 stock testPerformProvider[][] = {
@@ -252,6 +253,8 @@ public run_test()
         TEST_INIT("curl form add")
         new Handle:form = curl_create_form()
 
+        TEST_NEQUAL(form, INVALID_HANDLE)
+
         new CURLFORMcode:code = curl_form_add(
             form,
             CURLFORM_COPYNAME,
@@ -264,6 +267,55 @@ public run_test()
         )
 
         TEST_EQUAL(code, CURL_FORMADD_OK)
+
+        TEST_EQUAL(curl_destroy_form(form), 1)
+    }
+
+    {
+        TEST_INIT("curl form opt")
+        new Handle:form = curl_create_form()
+
+        TEST_NEQUAL(form, INVALID_HANDLE)
+
+        new CURLFORMcode:code = curl_form_add(
+            form,
+            CURLFORM_COPYNAME,
+            "submit",
+            CURLFORM_COPYCONTENTS,
+            "send",
+            CURLFORM_END
+        )
+
+        TEST_EQUAL(code, CURL_FORMADD_OK)
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
+        TEST_EQUAL(helperSetUrl(curl, 0, TEST_FORM), CURLE_OK)
+        TEST_EQUAL(curl_setopt_handle(curl, CURLOPT_HTTPPOST, form), CURLE_OK)
+
+        curl_exec(curl, "OnCheckOkComplete")
+        TEST_EQUAL(curl_close(curl), 1)
+
+        TEST_EQUAL(curl_destroy_form(form), 1)
+    }
+
+    {
+        TEST_INIT("curl form invalid")
+
+        new Handle:form = curl_create_form()
+
+        new CURLFORMcode:code = curl_form_add(
+            form,
+            CURLFORM_COPYNAME,
+            "submit",
+            CURLFORM_END
+        )
+
+        TEST_EQUAL(code, CURL_FORMADD_INCOMPLETE)
+
+        TEST_EQUAL(curl_destroy_form(form), 1)
     }
 }
 

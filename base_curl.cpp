@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "curl_header.h"
 #include "curl_wrap.h"
+#include "am-vector.h"
 
 static void FreeCurl(void* p, unsigned int num) {
     Curl* curl = (Curl*) p;
@@ -120,6 +121,15 @@ static cell AMX_NATIVE_CALL AMX_CurlSetOptHandle(AMX* amx, cell* params) {
     switch (opt) {
         case CURLOPT_HTTPHEADER: {
             void* val = GetHandle(params[3], HANDLE_CURL_SLIST);
+            if (!val) {
+                return -1;
+            }
+
+            return curl->SetOptionHandle(opt, val);
+        }
+
+        case CURLOPT_HTTPPOST: {
+            void* val = GetHandle(params[3], HANDLE_CURL_FORM);
             if (!val) {
                 return -1;
             }
@@ -279,48 +289,53 @@ static cell AMX_NATIVE_CALL AMX_CurlDestroyForm(AMX* amx, cell* params) {
 
 // native curl_form_add(Handle:form, any:...)
 static cell AMX_NATIVE_CALL AMX_CurlFormAdd(AMX* amx, cell* params) {
-    cell handle = *MF_GetAmxAddr(amx, params[1]);
-    CurlWebForm* form = (CurlWebForm*)GetHandle(handle, HANDLE_CURL_FORM);
+    CurlWebForm* form = (CurlWebForm*)GetHandle(params[1], HANDLE_CURL_FORM);
     if (!form) {
-        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", handle);
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
         return false;
     }
 
-    CURLFORMcode result = CURL_FORMADD_INCOMPLETE;
-    unsigned int params_number = *MF_GetAmxAddr(amx, params[0]), i = 2, j = 0;
+    CURLFORMcode result = CURL_FORMADD_OK;
+    int params_number = params[0], i = 2, j = 0, pairs;
 
-    for (; i < params_number; ++i) {
+    if ((params_number - 2) % 2 != 0) {
+        return CURL_FORMADD_INCOMPLETE;
+    }
+
+    pairs = (params_number - 2) >> 1;
+
+    ke::Vector<ke::AString> strings;
+    ke::Vector<curl_forms> arr;
+    arr.resize(pairs);
+    strings.resize(pairs);
+
+    for (; i < params_number && result == CURL_FORMADD_OK; ++i, ++j) {
         cell part1 = *MF_GetAmxAddr(amx, params[i]);
-        CURLformoption opt = (CURLformoption)part1;
+        CURLformoption option = (CURLformoption)part1;
 
-        if (CURLFORM_END == opt) {
+        if (CURLFORM_END == option) {
+            arr[j].option = CURLFORM_END;
             break;
         }
 
-        if (MF_GetAmxAddr(amx, params[++i]) == NULL) {
-            return CURL_FORMADD_INCOMPLETE;
-        }
+        ++i;
+        arr[j].option = option;
 
-        cell part2 = *MF_GetAmxAddr(amx, params[i]);
-
-        if (curl_module_form_is_cell_option(opt)) {
-            form->SetOptionCell(opt, part2);
-        } else if (curl_module_form_is_string_option(opt)) {
+        if (curl_module_form_is_cell_option(option) ||
+            curl_module_form_is_string_option(option)
+        ) {
             int len;
-            char* val = MF_GetAmxString(amx, part2, 0, &len);
-            form->SetOptionString(opt, val);
-        } else if (curl_module_form_is_handle_option(opt)) {
-            if (opt == CURLFORM_CONTENTHEADER) {
-
-            }
+            strings[j] = MF_GetAmxString(amx, params[i], 0, &len);
+            arr[j].value = strings[j].chars();
+        } else if (curl_module_form_is_handle_option(option)) {
         } else {
             result = CURL_FORMADD_INCOMPLETE;
-            break;
         }
+    }
 
-        if (form->last_error() != CURL_FORMADD_OK) {
-            return form->last_error();
-        }
+    if (result == CURL_FORMADD_OK) {
+        form->SetArray(arr.buffer());
+        result = form->last_error();
     }
 
     return result;

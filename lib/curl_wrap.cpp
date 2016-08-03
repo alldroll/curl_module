@@ -1,4 +1,5 @@
 #include "curl_wrap.h"
+#include "am-vector.h"
 
 static size_t ReadFunction(
     char* data, size_t bytes, size_t nitems, void* ctx
@@ -79,36 +80,12 @@ curl_httppost* CurlWebForm::GetFormData() {
     return first_;
 }
 
-bool CurlWebForm::SetOptionCell(CURLformoption opt, int data) {
+bool CurlWebForm::SetArray(const curl_forms* arr) {
     last_error_ = curl_formadd(
         &first_,
         &last_,
-        opt,
-        data,
-        CURLFORM_END
-    );
-
-    return last_error_ == CURL_FORMADD_OK;
-}
-
-bool CurlWebForm::SetOptionString(CURLformoption opt, const char* data) {
-    last_error_ = curl_formadd(
-        &first_,
-        &last_,
-        opt,
-        data,
-        CURLFORM_END
-    );
-
-    return last_error_ == CURL_FORMADD_OK;
-}
-
-bool CurlWebForm::SetOptionHandle(CURLformoption opt, void* data) {
-    last_error_ = curl_formadd(
-        &first_,
-        &last_,
-        opt,
-        data,
+        CURLFORM_ARRAY,
+        arr,
         CURLFORM_END
     );
 
@@ -159,6 +136,12 @@ CURLcode Curl::SetOptionHandle(CURLoption option, void* handle) {
         case CURLOPT_HTTPHEADER: {
             CurlSList* wrapper = (CurlSList*) handle;
             code = curl_easy_setopt(curl_, option, wrapper->slist);
+            break;
+        }
+
+        case CURLOPT_HTTPPOST: {
+            CurlWebForm* wrapper = (CurlWebForm*) handle;
+            code = curl_easy_setopt(curl_, option, wrapper->GetFormData());
             break;
         }
     }
