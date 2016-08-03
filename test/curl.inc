@@ -891,13 +891,21 @@ native curl_destroy_slist(Handle:slist);
 native curl_slist_append(Handle:slist, const str[]);
 
 /**
+ * Initialize CurlWebForm (pair of curl_httppost struct objects)
+ * @return Handle
  */
 native Handle:curl_create_form();
 
 /**
+ * Destroy CurlWebForm
+ * @param form Handle
+ * @return True on success, otherwise False
  */
 native Handle:curl_destroy_form(Handle:form);
 
 /**
+ * Add a section to a multipart/formdata HTTP POST
+ * @param form Handle
+ * any...
  */
 native CURLFORMcode:curl_form_add(Handle:form, any:...);
