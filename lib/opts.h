@@ -71,4 +71,15 @@
   _(CURLOPT_HTTPPOST,                 CURL_OPT_HANDLE)                         \
 
 
+#define SUPPORTED_FORM_OPT_LIST(_)                                             \
+  _(CURLFORM_COPYNAME,                CURL_OPT_STRING)                         \
+  _(CURLFORM_COPYCONTENTS,            CURL_OPT_STRING)                         \
+  _(CURLFORM_FILECONTENT,             CURL_OPT_STRING)                         \
+  _(CURLFORM_FILE,                    CURL_OPT_STRING)                         \
+  _(CURLFORM_CONTENTTYPE,             CURL_OPT_STRING)                         \
+  _(CURLFORM_FILENAME,                CURL_OPT_STRING)                         \
+  _(CURLFORM_NAMELENGTH,              CURL_OPT_CELL)                           \
+  _(CURLFORM_CONTENTSLENGTH,          CURL_OPT_CELL)                           \
+  _(CURLFORM_CONTENTHEADER,           CURL_OPT_HANDLE)                         \
+
 #endif
