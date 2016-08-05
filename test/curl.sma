@@ -14,6 +14,10 @@ new testN = 0
 /*
  * TODO use TestT
  * Add doc
+ * 
+
+ * Bugs:
+ * test number does not match actual number because of threaded performs (scope too)
  */
 
 enum TestT
@@ -60,6 +64,14 @@ public OnCheckOkComplete(Handle:curl, CURLcode:code, const response[], any:testE
 {
     TEST_EQUAL(code, CURLE_OK)
     TEST_EQUAL(equal("ok", response), true)
+}
+
+public OnCheckFormOkComplete(Handle:curl, CURLcode:code, const response[], any:form)
+{
+    TEST_EQUAL(code, CURLE_OK)
+    TEST_EQUAL(equal("ok", response), true)
+    TEST_EQUAL(curl_destroy_form(form), 1)
+    TEST_EQUAL(curl_close(curl), 1)
 }
 
 /**
@@ -295,10 +307,37 @@ public run_test()
         TEST_EQUAL(helperSetUrl(curl, 0, TEST_FORM), CURLE_OK)
         TEST_EQUAL(curl_setopt_handle(curl, CURLOPT_HTTPPOST, form), CURLE_OK)
 
-        curl_exec(curl, "OnCheckOkComplete")
+        TEST_EQUAL(curl_exec(curl, "OnCheckOkComplete"), CURLE_OK)
         TEST_EQUAL(curl_close(curl), 1)
 
         TEST_EQUAL(curl_destroy_form(form), 1)
+    }
+
+    {
+        TEST_INIT("curl thread form opt")
+        new Handle:form = curl_create_form()
+
+        TEST_NEQUAL(form, INVALID_HANDLE)
+
+        new CURLFORMcode:code = curl_form_add(
+            form,
+            CURLFORM_COPYNAME,
+            "submit",
+            CURLFORM_COPYCONTENTS,
+            "send",
+            CURLFORM_END
+        )
+
+        TEST_EQUAL(code, CURL_FORMADD_OK)
+
+        new Handle:curl = curl_init()
+        TEST_NEQUAL(curl, INVALID_HANDLE)
+
+        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
+        TEST_EQUAL(helperSetUrl(curl, 0, TEST_FORM), CURLE_OK)
+        TEST_EQUAL(curl_setopt_handle(curl, CURLOPT_HTTPPOST, form), CURLE_OK)
+
+        TEST_EQUAL(curl_thread_exec(curl, "OnCheckFormOkComplete", form), 1)
     }
 
     {

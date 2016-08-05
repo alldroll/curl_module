@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "curl_header.h"
 #include "curl_wrap.h"
-#include "am-vector.h"
+#include "am-fixedarray.h"
 
 static void FreeCurl(void* p, unsigned int num) {
     Curl* curl = (Curl*) p;
@@ -304,10 +304,8 @@ static cell AMX_NATIVE_CALL AMX_CurlFormAdd(AMX* amx, cell* params) {
 
     pairs = (params_number - 2) >> 1;
 
-    ke::Vector<ke::AString> strings;
-    ke::Vector<curl_forms> arr;
-    arr.resize(pairs);
-    strings.resize(pairs);
+    ke::FixedArray<ke::AString> strings(pairs);
+    ke::FixedArray<curl_forms> arr(pairs);
 
     for (; i < params_number && result == CURL_FORMADD_OK; ++i, ++j) {
         cell part1 = *MF_GetAmxAddr(amx, params[i]);
@@ -327,9 +325,14 @@ static cell AMX_NATIVE_CALL AMX_CurlFormAdd(AMX* amx, cell* params) {
             int len;
             strings[j] = MF_GetAmxString(amx, params[i], 0, &len);
             arr[j].value = strings[j].chars();
-        } else if (curl_module_form_is_handle_option(option)) {
-        } else {
-            result = CURL_FORMADD_INCOMPLETE;
+        } else if (CURLFORM_CONTENTHEADER == option) {
+            CurlSList* slist = (CurlSList*)GetHandle(params[i], HANDLE_CURL_SLIST);
+            if (!slist) {
+                MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[i]);
+                result = CURL_FORMADD_INCOMPLETE;
+            } else {
+                arr[j].value = (char*)slist;
+            }
         }
     }
 
