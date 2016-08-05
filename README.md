@@ -57,6 +57,12 @@ public hook_death()
 ```
 p.s. for more information see tests
 
+### Notice
+
+* functions curl_form_add, curl_destroy_form, curl_slist_append, curl_destroy_slist
+are not thread safe now, so please, if you share curl_slist, curl_form handles
+between threaded performs, make sure, that you use this functions after all performs
+* there are wrong test number + test name for some test cases because of thread_exec
 
 ### Natives
 
