@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "curl_header.h"
 #include "curl_wrap.h"
+#include "am-fixedarray.h"
 
 static void FreeCurl(void* p, unsigned int num) {
     Curl* curl = (Curl*) p;
@@ -10,6 +11,11 @@ static void FreeCurl(void* p, unsigned int num) {
 static void FreeSList(void* p, unsigned int num) {
     CurlSList* slist = (CurlSList*) p;
     delete slist;
+}
+
+static void FreeForm(void* p, unsigned int num) {
+    CurlWebForm* form = (CurlWebForm*) p;
+    delete form;
 }
 
 // native Handle:curl_init();
@@ -115,6 +121,15 @@ static cell AMX_NATIVE_CALL AMX_CurlSetOptHandle(AMX* amx, cell* params) {
     switch (opt) {
         case CURLOPT_HTTPHEADER: {
             void* val = GetHandle(params[3], HANDLE_CURL_SLIST);
+            if (!val) {
+                return -1;
+            }
+
+            return curl->SetOptionHandle(opt, val);
+        }
+
+        case CURLOPT_HTTPPOST: {
+            void* val = GetHandle(params[3], HANDLE_CURL_FORM);
             if (!val) {
                 return -1;
             }
@@ -250,6 +265,85 @@ static cell AMX_NATIVE_CALL AMX_CurlSListAppend(AMX* amx, cell* params) {
     return true;
 }
 
+// native Handle:curl_create_form()
+static cell AMX_NATIVE_CALL AMX_CurlCreateForm(AMX* amx, cell* params) {
+    CurlWebForm* form = new CurlWebForm();
+    if (!form) { /* is it ok ? */
+        MF_LogError(amx, AMX_ERR_NATIVE, "Couldn't alloc curl handle");
+        return -1;
+    }
+
+    return MakeHandle(form, HANDLE_CURL_FORM, FreeForm);
+}
+
+// native curl_destroy_form(Handle:form)
+static cell AMX_NATIVE_CALL AMX_CurlDestroyForm(AMX* amx, cell* params) {
+    bool success = true;
+    if (!FreeHandle(params[1])) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        success = false;
+    }
+
+    return success;
+}
+
+// native curl_form_add(Handle:form, any:...)
+static cell AMX_NATIVE_CALL AMX_CurlFormAdd(AMX* amx, cell* params) {
+    CurlWebForm* form = (CurlWebForm*)GetHandle(params[1], HANDLE_CURL_FORM);
+    if (!form) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[1]);
+        return false;
+    }
+
+    CURLFORMcode result = CURL_FORMADD_OK;
+    int params_number = params[0], i = 2, j = 0, pairs;
+
+    if ((params_number - 2) % 2 != 0) {
+        return CURL_FORMADD_INCOMPLETE;
+    }
+
+    pairs = (params_number - 2) >> 1;
+
+    ke::FixedArray<ke::AString> strings(pairs);
+    ke::FixedArray<curl_forms> arr(pairs);
+
+    for (; i < params_number && result == CURL_FORMADD_OK; ++i, ++j) {
+        cell part1 = *MF_GetAmxAddr(amx, params[i]);
+        CURLformoption option = (CURLformoption)part1;
+
+        if (CURLFORM_END == option) {
+            arr[j].option = CURLFORM_END;
+            break;
+        }
+
+        ++i;
+        arr[j].option = option;
+
+        if (curl_module_form_is_cell_option(option) ||
+            curl_module_form_is_string_option(option)
+        ) {
+            int len;
+            strings[j] = MF_GetAmxString(amx, params[i], 0, &len);
+            arr[j].value = strings[j].chars();
+        } else if (CURLFORM_CONTENTHEADER == option) {
+            CurlSList* slist = (CurlSList*)GetHandle(params[i], HANDLE_CURL_SLIST);
+            if (!slist) {
+                MF_LogError(amx, AMX_ERR_NATIVE, "Invalid handle: %d", params[i]);
+                result = CURL_FORMADD_INCOMPLETE;
+            } else {
+                arr[j].value = (char*)slist;
+            }
+        }
+    }
+
+    if (result == CURL_FORMADD_OK) {
+        form->SetArray(arr.buffer());
+        result = form->last_error();
+    }
+
+    return result;
+}
+
 AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_init", AMX_CurlInit},
     {"curl_close", AMX_CurlClose},
@@ -265,5 +359,8 @@ AMX_NATIVE_INFO g_BaseCurlNatives[] = {
     {"curl_create_slist", AMX_CurlCreateSList},
     {"curl_destroy_slist", AMX_CurlDestroySList},
     {"curl_slist_append", AMX_CurlSListAppend},
+    {"curl_create_form", AMX_CurlCreateForm},
+    {"curl_destroy_form", AMX_CurlDestroyForm},
+    {"curl_form_add", AMX_CurlFormAdd},
     {NULL, NULL}
 };

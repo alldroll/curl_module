@@ -12,7 +12,8 @@ enum HandleType
     HANDLE_CURL = 0,
     HANDLE_CURL_READ,
     HANDLE_CURL_WRITE,
-    HANDLE_CURL_SLIST
+    HANDLE_CURL_SLIST,
+    HANDLE_CURL_FORM
 };
 
 typedef void (*FREEHANDLE)(void *, unsigned int);

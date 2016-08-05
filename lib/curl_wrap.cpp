@@ -1,4 +1,5 @@
 #include "curl_wrap.h"
+#include "am-vector.h"
 
 static size_t ReadFunction(
     char* data, size_t bytes, size_t nitems, void* ctx
@@ -64,6 +65,33 @@ static void SetDefaultOptions(Curl* ctx) {
     curl_easy_setopt(h, CURLOPT_NOSIGNAL, 1);
 }
 
+CurlWebForm::CurlWebForm():
+    first_(NULL),
+    last_(NULL),
+    last_error_(CURL_FORMADD_OK) {}
+
+CurlWebForm::~CurlWebForm() {
+    if (first_) {
+        curl_formfree(first_);
+    }
+}
+
+curl_httppost* CurlWebForm::GetFormData() {
+    return first_;
+}
+
+bool CurlWebForm::SetArray(const curl_forms* arr) {
+    last_error_ = curl_formadd(
+        &first_,
+        &last_,
+        CURLFORM_ARRAY,
+        arr,
+        CURLFORM_END
+    );
+
+    return last_error_ == CURL_FORMADD_OK;
+}
+
 CurlRead::CurlRead() : method(CURL_IGNORE), file(NULL) {}
 
 CurlWrite::CurlWrite() : method(CURL_RETURN), file(NULL) {
@@ -108,6 +136,12 @@ CURLcode Curl::SetOptionHandle(CURLoption option, void* handle) {
         case CURLOPT_HTTPHEADER: {
             CurlSList* wrapper = (CurlSList*) handle;
             code = curl_easy_setopt(curl_, option, wrapper->slist);
+            break;
+        }
+
+        case CURLOPT_HTTPPOST: {
+            CurlWebForm* wrapper = (CurlWebForm*) handle;
+            code = curl_easy_setopt(curl_, option, wrapper->GetFormData());
             break;
         }
     }
