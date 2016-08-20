@@ -1,5 +1,7 @@
 #include <amxmodx>
 #include <curl>
+#include <utest>
+
 
 new testN = 0
 
@@ -80,35 +82,6 @@ public OnCheckFormOkComplete(Handle:curl, CURLcode:code, const response[], any:f
  */
 public run_test()
 {
-    {
-        TEST_INIT("curl create/destroy")
-
-        new Handle:curl = curl_init()
-        TEST_NEQUAL(curl, INVALID_HANDLE)
-        TEST_EQUAL(curl_close(curl), 1)
-    }
-
-    {
-        TEST_INIT("curl setopt port, url")
-
-        new Handle:curl = curl_init()
-        TEST_NEQUAL(curl, INVALID_HANDLE)
-        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "localhost"), CURLE_OK)
-        TEST_EQUAL(curl_close(curl), 1)
-    }
-
-    {
-        TEST_INIT("curl test simple exec")
-
-        new Handle:curl = curl_init()
-        TEST_NEQUAL(curl, INVALID_HANDLE)
-        TEST_EQUAL(curl_setopt_cell(curl, CURLOPT_PORT, 8080), CURLE_OK)
-        TEST_EQUAL(curl_setopt_string(curl, CURLOPT_URL, "localhost"), CURLE_OK)
-        TEST_EQUAL(curl_exec(curl), CURLE_OK)
-        TEST_EQUAL(curl_close(curl), 1)
-    }
-
     {
         TEST_INIT("curl test duplicate")
 
@@ -358,8 +331,39 @@ public run_test()
     }
 }
 
+public run_test2()
+{
+    utest_run()
+}
+
+START_TEST(test1) {
+    new Handle:curl = curl_init()
+    ASSERT_TRUE(INVALID_HANDLE != curl)
+    ASSERT_TRUE(curl_close(curl))
+} END_TEST
+
+START_TEST(test2) {
+    new Handle:curl = curl_init()
+    ASSERT_TRUE(curl_setopt_cell(curl, CURLOPT_PORT, 8080) == CURLE_OK)
+    ASSERT_TRUE(curl_setopt_string(curl, CURLOPT_URL, "localhost") == CURLE_OK)
+    curl_close(curl)
+} END_TEST
+
+START_TEST(test3) {
+    new Handle:curl = curl_init()
+    curl_setopt_cell(curl, CURLOPT_PORT, 8080)
+    curl_setopt_string(curl, CURLOPT_URL, "localhost")
+    ASSERT_TRUE(curl_exec(curl) == CURLE_OK)
+    curl_close(curl)
+} END_TEST
+
 public plugin_init()
 {
     register_plugin("curl_unit_test", "1.0", "alldroll")
-    register_srvcmd("curltest", "run_test")
+
+    add_test("test1", "simple create/destroy curl handle")
+    add_test("test2", "setopt PORT URL")
+    add_test("test3", "curl simple exec")
+
+    set_task(1.0, "run_test2")
 }
