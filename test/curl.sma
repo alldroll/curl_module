@@ -2,7 +2,6 @@
 #include <curl>
 #include <utest>
 
-
 new testN = 0
 
 #define TEST_INIT(%1)   server_print("[Testing %s]", %1);   testN = 0
@@ -331,9 +330,17 @@ public run_test()
     }
 }
 
+TEST_LIST = {
+    { "test1", "simple create/destroy curl handle" },
+    { "test2", "setopt PORT URL" },
+    { "test3", "curl simple exec" },
+    { "test4", "create diplicate" },
+    TEST_LIST_END
+};
+
 public run_test2()
 {
-    utest_run()
+    UTEST_RUN(UT_VERBOSE)
 }
 
 START_TEST(test1) {
@@ -353,17 +360,26 @@ START_TEST(test3) {
     new Handle:curl = curl_init()
     curl_setopt_cell(curl, CURLOPT_PORT, 8080)
     curl_setopt_string(curl, CURLOPT_URL, "localhost")
-    ASSERT_TRUE(curl_exec(curl) == CURLE_OK)
+    ASSERT_TRUE_MSG(curl_exec(curl) == CURLE_OK, "exec should return CURLE_OK")
     curl_close(curl)
+} END_TEST
+
+START_TEST(test4) {
+    new Handle:curl = curl_init()
+    curl_setopt_cell(curl, CURLOPT_PORT, 8080)
+    curl_setopt_string(curl, CURLOPT_URL, "localhost")
+
+    new Handle:dupl = curl_duphandle(curl);
+    ASSERT_TRUE_MSG(dupl != INVALID_HANDLE, "duplicate has to be valid")
+
+    new CURLcode:code = curl_exec(curl)
+    curl_close(curl)
+    ASSERT_TRUE(curl_exec(dupl) == code)
+    ASSERT_INT_EQ(curl_close(dupl), 1)
 } END_TEST
 
 public plugin_init()
 {
     register_plugin("curl_unit_test", "1.0", "alldroll")
-
-    add_test("test1", "simple create/destroy curl handle")
-    add_test("test2", "setopt PORT URL")
-    add_test("test3", "curl simple exec")
-
-    set_task(1.0, "run_test2")
+    set_task(2.0, "run_test2")
 }
