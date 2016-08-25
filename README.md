@@ -3,7 +3,7 @@ Curl amxmodx module
 
 This module adds support to use some curl library functionality in pawn lang.
 
-This module was not tested on windows, mac machines, on old amxmodx versions. So
+This module was not tested on mac machines, on old amxmodx versions. So
 you can help with it:). Requires libcurl >= 7.35.0.
 
 ### How does it works:
