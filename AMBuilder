@@ -3,7 +3,7 @@ import os.path
 
 binary = AMXX.MetaModule(builder, 'curl')
 
-if not AMXX.curl_path:
+if not hasattr(AMXX, 'curl_path'):
   AMXX.curl_path = builder.currentSourcePath + '/curl_src'
 
 binary.compiler.cxxincludes += [
@@ -14,6 +14,7 @@ binary.compiler.cxxincludes += [
 
 binary.compiler.defines += [
   'SM_DEFAULT_THREADER',
+  'HAVE_STDINT_H'
 ]
 
 if builder.target_platform is 'linux' or builder.target_platform is 'mac':
@@ -22,9 +23,18 @@ if builder.target_platform is 'linux' or builder.target_platform is 'mac':
     '-lpthread',
     '-lm'
   ]
+else:
+  binary.compiler.defines += [
+    'CURL_STATICLIB',
+    'snprintf=_snprintf'
+  ]
+  binary.compiler.linkflags += [
+    os.path.join(AMXX.curl_path, 'lib', 'libcurl_a.lib'),
+    '/NODEFAULTLIB:libcmt' #i do something wrong
+  ]
 
 binary.compiler.linkflags += [AMXX.zlib.binary]
-
+         
 binary.sources = [
   'base_curl.cpp',
   'thread_curl.cpp',
