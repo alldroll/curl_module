@@ -1,0 +1,3 @@
+[submodule "test/utest"]
+	path = test/utest
+	url = https://github.com/alldroll/amx-utest.git
